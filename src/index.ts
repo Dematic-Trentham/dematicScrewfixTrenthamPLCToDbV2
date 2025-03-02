@@ -50,7 +50,7 @@ cron.schedule("*/5 * * * * *", async () => {
 		await Promise.all(
 			tasks.map(({ name, task }) =>
 				task.catch((error) => {
-					console.error(`Error in function ${name}:`, error);
+					console.error(`Error in  function ${name}:`, error);
 				})
 			)
 		);
