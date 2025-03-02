@@ -1,0 +1,41 @@
+{
+	"name": "dematicDashboardScrewfixplctodb",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"type": "module",
+	"scripts": {
+		"clean": "rimraf dist",
+		"start": "node index.js",
+		"startDev": "node build/index.js",
+		"startDevWatch": "nodemon build/index.js",
+		"startDev2Watch": "nodemon src/index.ts",
+		"startDevDockInspect": "nodemon build/index.js --inspect-brk=0.0.0.0",
+		"buildOnce": "tsc",
+		"build": "tsc --watch",
+		"prisma-merge": "prisma format --schema=./node_modules/masterPrismaSchema/prisma/schema/ && npm run prisma-gen && echo 'complete!'",
+		"prisma-gen": "prisma generate --schema=./node_modules/masterPrismaSchema/prisma/schema",
+		"prisma-pull": "npx prisma db pull --schema=./node_modules/masterPrismaSchema/prisma/schema",
+		"prisma-push": "npx prisma db push --schema=./node_modules/masterPrismaSchema/prisma/schema",
+		"packageJsonStripper": "node tools/packageJsonStripper.js",
+		"build-docker": "docker build -t screwfix-trentham-plctodb ."
+	},
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"@prisma/client": "^5.19.1",
+		"bluebird": "^3.7.2",
+		"moment": "^2.30.1",
+		"mysql": "^2.18.1",
+		"node-cron": "^3.0.3",
+		"node-snap7": "^1.0.7"
+	},
+	"devDependencies": {
+		"@types/mysql": "^2.15.26",
+		"@types/node-cron": "^3.0.11",
+		"@types/node-snap7": "^0.2.24",
+		"masterPrismaSchema": "git+https://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:x-oauth-basic@github.com/jameswlyons/dematicDashboardScrewfixTrenthamMasterPrismaSchema.git",
+		"prettier": "^3.3.3",
+		"prisma": "^5.19.1"
+	}
+}
