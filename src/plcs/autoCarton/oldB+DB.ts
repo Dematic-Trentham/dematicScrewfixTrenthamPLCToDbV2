@@ -109,28 +109,5 @@ async function getAndInsertFaultsDB(
 	}
 }
 
-//if any of the machines in the array have not been updated in the last 60 seconds then insert a fault
-setInterval(async () => {
-	//time now for watchdog timer
-	let timeNow = new Date();
-
-	//for each machine in the machines array check if the machine exists
-	for (let m in machines) {
-		//if the machine exists then set machineExists to true
-		if (timeNow.getTime() - machines[m].watchDogTimer.getTime() > 60 * 1000) {
-			await addFaultsToDB(
-				machines[m].machineType,
-				"watchDog",
-				machines[m].line
-			);
-
-			//console.log("Watchdog timer expired for " + machines[m].machineType + " " + machines[m].line);
-			//console.log(sql);
-			//reset the watchdog timer
-			machines[m].watchDogTimer = timeNow;
-		}
-	}
-}, 1000);
-
 //export the function
 export default { getAndInsertFaultsDB };

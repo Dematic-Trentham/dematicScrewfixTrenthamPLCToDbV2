@@ -520,9 +520,18 @@ import newBPlus from "./newB+.js";
 async function getAndInsertFaults(
 	ip: string,
 	machineType: autoCartonMachineType,
-	line: number
+	line: number,
+	version: string = "S7"
 ) {
-	await newBPlus.getAndInsertFaults(ip, machineType, line, faults, 11, 6);
+	await newBPlus.getAndInsertFaults(
+		ip,
+		machineType,
+		line,
+		faults,
+		11,
+		6,
+		version
+	);
 }
 
 export default { getAndInsertFaults };

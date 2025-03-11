@@ -89,12 +89,7 @@ async function getBPlusMachine(
 						//for (let index = 0; index < difference; index++) {
 						//add the fault to the database
 						console.log(
-							"Adding fault to database - " +
-								machineName +
-								" - " +
-								fault +
-								" - " +
-								difference
+							"Adding fault to database - " + machineName + " - " + fault
 						);
 						await addFaultsToDB(machineType, fault, line);
 						//}

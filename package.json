@@ -24,16 +24,21 @@
 	"license": "ISC",
 	"dependencies": {
 		"@prisma/client": "^5.19.1",
+		"@types/ping": "^0.4.4",
 		"bluebird": "^3.7.2",
 		"moment": "^2.30.1",
 		"mysql": "^2.18.1",
 		"node-cron": "^3.0.3",
-		"node-snap7": "^1.0.7"
+		"node-snap7": "^1.0.7",
+		"ping": "^0.4.4",
+		"winston": "^3.17.0",
+		"winston-daily-rotate-file": "^5.0.0"
 	},
 	"devDependencies": {
 		"@types/mysql": "^2.15.26",
 		"@types/node-cron": "^3.0.11",
 		"@types/node-snap7": "^0.2.24",
+		"@types/winston": "^2.4.4",
 		"masterPrismaSchema": "git+https://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:x-oauth-basic@github.com/jameswlyons/dematicDashboardScrewfixTrenthamMasterPrismaSchema.git",
 		"prettier": "^3.3.3",
 		"prisma": "^5.19.1"

@@ -5,6 +5,7 @@
 //Version: 1.0.0
 
 //import plc
+import { version } from "moment";
 import plc from "./../../misc/plc/plc.js";
 import snap7Types from "./../../misc/plc/types.js";
 
@@ -200,9 +201,18 @@ import { autoCartonMachineType } from "@prisma/client";
 async function getAndInsertFaults(
 	ip: string,
 	machineType: autoCartonMachineType,
-	line: number
+	line: number,
+	version: string = "S7"
 ) {
-	await newBPlus.getAndInsertFaults(ip, machineType, line, faults, 11, 70);
+	await newBPlus.getAndInsertFaults(
+		ip,
+		machineType,
+		line,
+		faults,
+		11,
+		70,
+		version
+	);
 }
 
 export default { getAndInsertFaults };

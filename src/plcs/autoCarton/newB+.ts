@@ -4,6 +4,7 @@ import snap7Types from "./../../misc/plc/types.js";
 //
 import { autoCartonMachineType } from "@prisma/client";
 import { addFaultsToDB } from "./faultAdder.js";
+import { version } from "moment";
 
 //make array of machines to store the faults
 let machines: any = [];
@@ -14,8 +15,18 @@ async function getAndInsertFaults(
 	line: number,
 	faults: any,
 	boxCountDb: number,
-	boxCountWord: number
+	boxCountWord: number,
+
+	version: string = "S7"
 ) {
+	let slot = 0;
+	//slot number for PLC
+	if (version == "S7") {
+		slot = 2;
+	} else if (version == "TIA") {
+		slot = 1;
+	}
+
 	//does the machine exist in the array
 	let machineExists = false;
 
@@ -39,6 +50,7 @@ async function getAndInsertFaults(
 			line: line,
 			boxCount: 0,
 			faults: JSON.parse(JSON.stringify(faults)),
+			connected: false,
 		});
 	}
 
@@ -49,7 +61,15 @@ async function getAndInsertFaults(
 
 	let currentMachineFaults = machines[machineIndex].faults;
 
-	let markerBytes = await plc.readFromS7Markers(ip, 0, 2, 0, 150);
+	//set connected to false
+	machines[machineIndex].connected = false;
+
+	let markerBytes = await plc.readFromS7Markers(ip, 0, slot, 0, 150);
+
+	//check if the machine is connected
+	if (markerBytes != null) {
+		machines[machineIndex].connected = true;
+	}
 
 	//loop through each fault and check if the bit is true
 	for (let f in currentMachineFaults) {
@@ -75,7 +95,7 @@ async function getAndInsertFaults(
 	let doubleWordValue = await plc.readFromS7DBToInt2(
 		ip,
 		0,
-		2,
+		slot,
 		boxCountDb,
 		boxCountWord,
 		snap7Types.WordLen.S7WLDWord
@@ -101,30 +121,6 @@ async function getAndInsertFaults(
 		machines[machineIndex].boxCount = doubleWordValue;
 	}
 }
-
-//if any of the machines in the array have not been updated in the last 60 seconds then insert a fault
-setInterval(() => {
-	//time now for watchdog timer
-	let timeNow = new Date();
-
-	//for each machine in the machines array check if the machine exists
-	for (let m in machines) {
-		//if the machine exists then set machineExists to true
-		if (timeNow.getTime() - machines[m].watchDogTimer.getTime() > 60 * 1000) {
-			addFaultsToDB(machines[m].machineType, "watchDog", machines[m].line);
-
-			console.log(
-				"Watchdog timer expired for " +
-					machines[m].machineType +
-					" " +
-					machines[m].line
-			);
-
-			//reset the watchdog timer
-			machines[m].watchDogTimer = timeNow;
-		}
-	}
-}, 1000);
 
 //export the function
 export default { getAndInsertFaults };

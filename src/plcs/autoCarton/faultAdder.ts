@@ -1,12 +1,14 @@
 import { autoCartonMachineType } from "@prisma/client";
 import db from "../../db/db.js";
 
+import logger from "../../logging.js";
+
 export async function addFaultsToDB(
 	machineType: autoCartonMachineType,
 	fault: string,
 	line: number
 ) {
-	console.log("Adding fault to DB: ", machineType, fault, line);
+	logger.info(`Adding fault to DB: ${machineType} ${fault} LINE ${line}`);
 
 	//is there already a faultcode in the database for this fault
 	let faultCodes = await db.autoCartonFaultCodeLookup.findFirst({
@@ -19,7 +21,7 @@ export async function addFaultsToDB(
 	let faultCodeID = 0;
 
 	if (faultCodes) {
-		console.log("Fault code already exists in DB: ", faultCodes.ID);
+		//	console.log("Fault code already exists in DB: ", faultCodes.ID);
 
 		faultCodeID = faultCodes.ID;
 	} else {
@@ -30,7 +32,7 @@ export async function addFaultsToDB(
 			},
 		});
 
-		console.log("Fault code created in DB: ", faultCode.ID);
+		//	console.log("Fault code created in DB: ", faultCode.ID);
 
 		faultCodeID = faultCode.ID;
 	}

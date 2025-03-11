@@ -22,7 +22,15 @@ async function getAndInsertFaults(
 	machineType: autoCartonMachineType,
 	line: number
 ) {
-	await newBPlus.getAndInsertFaults(ip, machineType, line, faults, 11, 10);
+	await newBPlus.getAndInsertFaults(
+		ip,
+		machineType,
+		line,
+		faults,
+		11,
+		10,
+		"S7"
+	);
 }
 
 export default { getAndInsertFaults };

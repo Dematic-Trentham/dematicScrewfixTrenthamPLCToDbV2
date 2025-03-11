@@ -33,17 +33,17 @@ cron.schedule("*/5 * * * * *", async () => {
 		//start timer for this function
 		const start = Date.now();
 		const tasks = [
-			{
-				name: "readDataFromPLC31TenSeconds",
-				task: plc31.readDataFromPLC31TenSeconds(),
-			},
+			//{
+			//	name: "readDataFromPLC31TenSeconds",
+			//	task: plc31.readDataFromPLC31TenSeconds(),
+			//},
 
 			{
 				name: "getAndInsertFaultsForAutoCarton",
 				task: autoCarton.getAndInsertFaultsForAutoCarton(),
 			},
 
-			{ name: "readShuttlesFaults", task: plcShuttles.readShuttlesFaults() },
+			//{ name: "readShuttlesFaults", task: plcShuttles.readShuttlesFaults() },
 			//{ name: "test", task: Promise.resolve(console.log("test")) },
 		];
 
@@ -105,7 +105,7 @@ cron.schedule("*/3 * * * * *", async () => {
 		//start timer for this function
 		const start = Date.now();
 
-		await emsZones.checkAllEMS();
+		//await emsZones.checkAllEMS();
 
 		//how long did this function take to run?
 		const end = Date.now();
