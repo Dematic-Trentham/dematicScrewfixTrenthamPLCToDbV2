@@ -4,10 +4,7 @@
 //Last modified: 2024/10/26 10:04:45
 //Version: 0.0.1
 import snap7Types from "../../../misc/plc/types.js";
-import {
-	readAndInsertMultiple,
-	readAndInsertSingle,
-} from "../functions/updateDB.js";
+import { readAndInsertMultiple } from "../functions/updateDB.js";
 
 const plcConfig = {
 	ip: "10.4.2.26",

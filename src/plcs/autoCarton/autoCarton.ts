@@ -4,37 +4,30 @@
 //Last modified: 2024/08/30 20:20:14
 //Version: 0.0.1
 
-import plcToDB from "../../misc/plcToDB.js";
-
-//import types
-import snap7Types from "../../misc/plc/types.js";
-
 //import tryCatchSimple
-import * as tryCatchSimple from "./../../misc/tryCatchSimple.js";
+
 import newIpackv1 from "./newIpackv1.js";
 import oldCC from "./machines.js";
-import oldIpack from "./oldIpack.js";
+
 import newCartonErector from "./cartonErectorNew.js";
 import oldCartonErector from "./cartonErectorOld.js";
 import db from "../../db/db.js";
 import ping from "ping";
 import { addFaultsToDB } from "./faultAdder.js";
 import { autoCartonMachineType } from "@prisma/client";
-
-//array to store the last known data from each plc
-let data: Record<string, any> = {};
+import logger from "../../misc/logging.js";
 
 //function to be run from the main program every 10 seconds
 //this function will read the data from the PLC and store it in the database
 async function getAndInsertFaultsForAutoCarton() {
-	//  await getErectors()
+	await getErectors();
 	await getIpacks();
 	await getLidders();
 }
 
 async function getErectors() {
 	//Lines 1-4
-	let tasks = [
+	const tasks = [
 		{
 			name: "erector1",
 			task: oldCartonErector.getAndInsertFaultsForOldErector(
@@ -76,7 +69,7 @@ async function getErectors() {
 	await Promise.all(
 		tasks.map(({ name, task }) =>
 			task.catch((error) => {
-				console.error(`Error in function ${name}:`, error);
+				logger.error(`Error in function ${name}:`, error);
 			})
 		)
 	);
@@ -84,7 +77,7 @@ async function getErectors() {
 
 async function getLidders() {
 	//
-	let tasks = [
+	const tasks = [
 		{
 			name: "lidder1",
 			task: newIpackv1.getAndInsertFaults("10.4.2.151", "Lidder", 1, "TIA"),
@@ -106,12 +99,12 @@ async function getLidders() {
 	await Promise.all(
 		tasks.map(({ name, task }) =>
 			task.catch((error) => {
-				console.error(`Error in function ${name}:`, error);
+				logger.error(`Error in function ${name}:`, error);
 			})
 		)
 	);
 
-	let tasks2 = [
+	const tasks2 = [
 		{
 			name: "lidder1Watchdog",
 			task: checkAndPingPLC("10.4.2.151", "Lidder", 1),
@@ -130,14 +123,14 @@ async function getLidders() {
 	await Promise.all(
 		tasks2.map(({ name, task }) =>
 			task.catch((error) => {
-				console.error(`Error in function ${name}:`, error);
+				logger.error(`Error in function ${name}:`, error);
 			})
 		)
 	);
 }
 
 async function getIpacks() {
-	let tasks = [
+	const tasks = [
 		{
 			name: "ipack1",
 			task: oldCC.getBPlusMachine("10.4.2.150", "Line1iPack", "iPack", 1),
@@ -168,12 +161,12 @@ async function getIpacks() {
 	await Promise.all(
 		tasks.map(({ name, task }) =>
 			task.catch((error) => {
-				console.error(`Error in function ${name}:`, error);
+				logger.error(`Error in function ${name}:`, error);
 			})
 		)
 	);
 
-	let tasks2 = [
+	const tasks2 = [
 		{ name: "ipack1Watchdog", task: checkAndPingPLC("10.4.2.150", "iPack", 1) },
 		{ name: "ipack2Watchdog", task: checkAndPingPLC("10.4.2.152", "iPack", 2) },
 		{ name: "ipack3Watchdog", task: checkAndPingPLC("10.4.2.154", "iPack", 3) },
@@ -185,7 +178,7 @@ async function getIpacks() {
 	await Promise.all(
 		tasks2.map(({ name, task }) =>
 			task.catch((error) => {
-				console.error(`Error in function ${name}:`, error);
+				logger.error(`Error in function ${name}:`, error);
 			})
 		)
 	);
@@ -205,16 +198,16 @@ async function checkAndPingPLC(
 	});
 
 	if (machineData == null) {
-		console.log(`No data for 60 seconds for ${machineType} ${line}`);
+		//	logger.error(`No data for 60 seconds for ${machineType} ${line}`);
 
 		// No data for 60 seconds, let's ping the PLC
 		const res = await ping.promise.probe(ip);
 		if (res.alive) {
-			console.log(`PLC ${ip} is reachable`);
+			//logger.error(`PLC ${ip} is reachable`);
 			// Update the watchdog timer and add a watchdog to the db
 			addFaultsToDB(machineType, "watchdog", line);
 		} else {
-			console.log(`PLC ${ip} is not reachable`);
+			//	logger.error(`PLC ${ip} is not reachable`);
 		}
 	}
 }

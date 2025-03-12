@@ -3,11 +3,9 @@
 //Date: 2023/02/03 03:38:36
 //Last modified: 2024/10/26 10:29:35
 //Version: 0.0.1
+import logger from "../../../misc/logging.js";
 import snap7Types from "../../../misc/plc/types.js";
-import {
-	readAndInsertMultiple,
-	readAndInsertSingle,
-} from "../functions/updateDB.js";
+import { readAndInsertMultiple } from "../functions/updateDB.js";
 
 const plcConfig = {
 	ip: "10.4.2.20",
@@ -30,11 +28,11 @@ export async function readEMSDataFromPLC1() {
 		},
 	];
 
-	console.log("Reading PLC1 EMS data");
+	logger.error("Reading PLC1 EMS data");
 
 	await readAndInsertMultiple(plcConfig, items);
 
-	console.log("PLC1 EMS data read");
+	logger.error("PLC1 EMS data read");
 }
 
 export default { readEMSDataFromPLC1 };

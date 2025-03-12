@@ -16,9 +16,10 @@ import PLC24 from "./PLCS/PLC24.js";
 import PLC31 from "./PLCS/PLC31.js";
 import PLC32 from "./PLCS/PLC32.js";
 import PLC33 from "./PLCS/PLC33.js";
+import logger from "../../misc/logging.js";
 
 async function checkAllEMS() {
-	console.log("Checking all EMS data");
+	logger.info("Checking all EMS data");
 
 	await PLC1.readEMSDataFromPLC1();
 	await PLC2.readEMSDataFromPLC2();

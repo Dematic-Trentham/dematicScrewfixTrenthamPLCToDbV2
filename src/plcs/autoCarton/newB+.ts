@@ -4,16 +4,24 @@ import snap7Types from "./../../misc/plc/types.js";
 //
 import { autoCartonMachineType } from "@prisma/client";
 import { addFaultsToDB } from "./faultAdder.js";
-import { version } from "moment";
 
 //make array of machines to store the faults
-let machines: any = [];
+interface Machine {
+	watchDogTimer: Date;
+	machineType: autoCartonMachineType;
+	line: number;
+	boxCount: number;
+	faults: { fault: string; location: string; current: boolean }[];
+	connected: boolean;
+}
+
+const machines: Machine[] = [];
 
 async function getAndInsertFaults(
 	ip: string,
 	machineType: autoCartonMachineType,
 	line: number,
-	faults: any,
+	faults: { fault: string; location: string; current: boolean }[],
 	boxCountDb: number,
 	boxCountWord: number,
 
@@ -31,9 +39,9 @@ async function getAndInsertFaults(
 	let machineExists = false;
 
 	//for each machine in the machines array check if the machine exists
-	for (let m in machines) {
+	for (const m of machines) {
 		//if the machine exists then set machineExists to true
-		if (machines[m].machineType == machineType && machines[m].line == line) {
+		if (m.machineType == machineType && m.line == line) {
 			machineExists = true;
 			break;
 		}
@@ -42,7 +50,7 @@ async function getAndInsertFaults(
 	//if the machine does not exist then add it to the array
 	if (!machineExists) {
 		//time now for watchdog timer
-		let timeNow = new Date();
+		const timeNow = new Date();
 
 		machines.push({
 			watchDogTimer: timeNow,
@@ -55,16 +63,17 @@ async function getAndInsertFaults(
 	}
 
 	//get the index of the machine in the array
-	let machineIndex = machines.findIndex(
-		(machine: any) => machine.machineType == machineType && machine.line == line
+	const machineIndex = machines.findIndex(
+		(machine: { machineType: autoCartonMachineType; line: number }) =>
+			machine.machineType == machineType && machine.line == line
 	);
 
-	let currentMachineFaults = machines[machineIndex].faults;
+	const currentMachineFaults = machines[machineIndex].faults;
 
 	//set connected to false
 	machines[machineIndex].connected = false;
 
-	let markerBytes = await plc.readFromS7Markers(ip, 0, slot, 0, 150);
+	const markerBytes = await plc.readFromS7Markers(ip, 0, slot, 0, 150);
 
 	//check if the machine is connected
 	if (markerBytes != null) {
@@ -72,18 +81,15 @@ async function getAndInsertFaults(
 	}
 
 	//loop through each fault and check if the bit is true
-	for (let f in currentMachineFaults) {
+	for (const f of currentMachineFaults) {
 		//get the bit value for the fault
-		let bitValue = await plc.bufferToBit2(
-			markerBytes,
-			currentMachineFaults[f].location
-		);
+		const bitValue = await plc.bufferToBit2(markerBytes, f.location);
 
 		//if the bit is true then insert the fault into the DB
-		if (bitValue == true && currentMachineFaults[f].current == false) {
-			await addFaultsToDB(machineType, currentMachineFaults[f].fault, line);
+		if (bitValue == true && f.current == false) {
+			await addFaultsToDB(machineType, f.fault, line);
 			//set current to true
-			currentMachineFaults[f].current = true;
+			f.current = true;
 
 			//update the watchdog timer
 			machines[machineIndex].watchDogTimer = new Date();
@@ -92,7 +98,7 @@ async function getAndInsertFaults(
 	//lets count the number of boxes and if we have a new box then insert into DB
 
 	//read double word from PLC
-	let doubleWordValue = await plc.readFromS7DBToInt2(
+	const doubleWordValue = await plc.readFromS7DBToInt2(
 		ip,
 		0,
 		slot,
@@ -107,7 +113,7 @@ async function getAndInsertFaults(
 	if (machines[machineIndex].boxCount != doubleWordValue) {
 		if (machines[machineIndex].boxCount != 0) {
 			//repeat the insert to match the difference in box count
-			let difference = doubleWordValue - machines[machineIndex].boxCount;
+			const difference = doubleWordValue - machines[machineIndex].boxCount;
 
 			//update the watchdog timer
 			machines[machineIndex].watchDogTimer = new Date();

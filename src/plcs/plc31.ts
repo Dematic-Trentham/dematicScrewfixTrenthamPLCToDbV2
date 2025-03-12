@@ -12,9 +12,9 @@ import snap7Types from "./../misc/plc/types.js";
 //function to be run from the main program every 10 seconds
 //this function will read the data from the PLC and store it in the database
 async function readDataFromPLC31TenSeconds() {
-  let ip = "10.4.2.27"; //IP address of the PLC
-  let rack = 0; //Rack number of the PLC
-  let slot = 3; //Slot number of the PLC.
+  const ip = "10.4.2.27"; //IP address of the PLC
+  const rack = 0; //Rack number of the PLC
+  const slot = 3; //Slot number of the PLC.
 
   await plcToDB.plcToDB(ip, rack, slot, snap7Types.Area.S7AreaDB, 145, 30, plcToDB.DataType.Word, "dematic_dashboard_PLC31_carton_erector_1");
   await plcToDB.plcToDB(ip, rack, slot, snap7Types.Area.S7AreaDB, 145, 50, plcToDB.DataType.Word, "dematic_dashboard_PLC31_carton_erector_2");

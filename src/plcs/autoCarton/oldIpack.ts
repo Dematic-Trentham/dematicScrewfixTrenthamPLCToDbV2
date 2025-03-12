@@ -4,12 +4,8 @@
 //Last modified: 2023/12/28 07:35:21
 //Version: 1.0.0
 
-//import plc
-import plc from "./../../misc/plc/plc.js";
-import snap7Types from "./../../misc/plc/types.js";
-
 //list of faults and there locations
-let faults = [
+const faults = [
 	{ fault: "D10 Empty Pallet Defect", location: "84.1", current: false },
 ];
 

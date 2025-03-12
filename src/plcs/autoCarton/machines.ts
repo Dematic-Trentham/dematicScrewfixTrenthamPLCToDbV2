@@ -4,11 +4,8 @@
 //Last modified: 2024/08/30 20:20:27
 //Version: 1.0.0
 
-//function currently running
-let currentlyRunning = false;
-
 //create array to store all carton closing data
-let cartonClosingData: { [key: string]: any } = {};
+const cartonClosingData: { [key: string]: any } = {};
 
 import snap7 from "node-snap7";
 //import db
@@ -18,6 +15,7 @@ import { iPackFaults } from "./faultDefinitions/iPackFaults.js";
 import { lidderFaults } from "./faultDefinitions/lidderFaults.js";
 import { lidderFaultsLine1 } from "./faultDefinitions/lidderFaultsLine1.js";
 import { autoCartonMachineType } from "@prisma/client";
+import logger from "../../misc/logging.js";
 
 //get Lidder Machine
 async function getBPlusMachine(
@@ -26,7 +24,8 @@ async function getBPlusMachine(
 	machineType: autoCartonMachineType,
 	line: number
 ) {
-	var promise = new Promise(async function (resolve, reject) {
+	// eslint-disable-next-line no-async-promise-executor
+	const promise = new Promise(async function (resolve, reject) {
 		//make request object
 		const request = {
 			machine: machineName,
@@ -36,7 +35,7 @@ async function getBPlusMachine(
 		};
 
 		try {
-			let results = await getBPlusMachineFaults(request);
+			const results = await getBPlusMachineFaults(request);
 
 			//console.log(results);
 
@@ -88,9 +87,7 @@ async function getBPlusMachine(
 
 						//for (let index = 0; index < difference; index++) {
 						//add the fault to the database
-						console.log(
-							"Adding fault to database - " + machineName + " - " + fault
-						);
+
 						await addFaultsToDB(machineType, fault, line);
 						//}
 					}
@@ -99,9 +96,9 @@ async function getBPlusMachine(
 
 			resolve(true);
 		} catch (err) {
-			console.log("error in machine.js 1 - " + request.machine);
+			logger.error("error in machine.js 1 - " + request.machine);
 			reject({ machine: request.machine, err });
-			console.log(err);
+			logger.error(err);
 		}
 	});
 	return promise;
@@ -113,27 +110,26 @@ function getBPlusMachineFaults(request: {
 	line: number;
 	machineType: string;
 }): Promise<any> {
-	var promise = new Promise(async function (resolve, reject) {
-		const machine = request.machine;
+	// eslint-disable-next-line no-async-promise-executor
+	const promise = new Promise(async function (resolve, reject) {
 		const ip = request.ip;
-		const line = request.line;
 
 		if (request.machineType == "Lidder" && request.line == 1) {
 			// console.log("aaaaaaaaaaaaa Lidder Line 1");
 		}
 
 		if (ip == undefined) {
-			console.log("error in machine.js 2 - " + request.machine);
+			logger.error("error in machine.js 2 - " + request.machine);
 			reject({ machine: request.machine, err: "Wrong Variables" });
 			return;
 		}
 
 		try {
-			let returnedFaults = await ConnectToPlcToGetBPlusMachineFaults(request);
+			const returnedFaults = await ConnectToPlcToGetBPlusMachineFaults(request);
 
 			resolve(returnedFaults);
 		} catch (err) {
-			console.log("error in machine.js 3 - " + request.machine + " - " + err);
+			logger.error("error in machine.js 3 - " + request.machine + " - " + err);
 
 			reject({ machine: request.machine, err });
 		}
@@ -147,17 +143,17 @@ async function ConnectToPlcToGetBPlusMachineFaults(request: {
 	line: number;
 	machineType: string;
 }): Promise<any> {
-	const machine = request.machine;
 	const ip = request.ip;
 	const line = request.line;
 
-	var promise = new Promise(async function (resolve, reject) {
+	// eslint-disable-next-line no-async-promise-executor
+	const promise = new Promise(async function (resolve, reject) {
 		//create new s7client
-		var s7client = new snap7.S7Client();
+		const s7client = new snap7.S7Client();
 
 		s7client.ConnectTo(ip, 0, 2, async function (err: any) {
 			if (err) {
-				console.log(
+				logger.error(
 					"error in machine.js 4 - " +
 						request.machine +
 						" - " +
@@ -173,7 +169,7 @@ async function ConnectToPlcToGetBPlusMachineFaults(request: {
 				//console.log("Lidder Line 1");
 			}
 
-			let returnedFaults = await ReadFaultsFromBPlusMachine(
+			const returnedFaults = await ReadFaultsFromBPlusMachine(
 				s7client,
 				size,
 				request
@@ -194,10 +190,10 @@ function ReadFaultsFromBPlusMachine(
 	size: number,
 	request: { machine: string; ip: string; line: number; machineType: string }
 ): Promise<any> {
-	var promise = new Promise(function (resolve, reject) {
+	const promise = new Promise(function (resolve, reject) {
 		s7client.DBRead(301, 16, size, function (err, res) {
 			if (err) {
-				console.log(
+				logger.error(
 					"error in machine.js 5 - " +
 						request.machine +
 						" - " +
@@ -208,14 +204,11 @@ function ReadFaultsFromBPlusMachine(
 				return;
 			}
 
-			if (request.machineType == "Lidder" && request.line == 1) {
-			}
-
 			//get the correct fault array
-			let faultArray: string[] = getTheCorrectFaultListToUse(request);
+			const faultArray: string[] = getTheCorrectFaultListToUse(request);
 
 			//use the correct fault array to get the correct fault names
-			let tempArray = parseResultIntoFaultLog(res, request, faultArray);
+			const tempArray = parseResultIntoFaultLog(res, request, faultArray);
 
 			resolve(tempArray);
 			return;
@@ -228,15 +221,15 @@ function parseResultIntoFaultLog(
 	request: { machine: string; ip: string; line: number; machineType: string },
 	faultArray: any[]
 ): number[] {
-	let tempArray: number[] = [];
+	const tempArray: number[] = [];
 	for (let index = 0; index < 238 / 2; index++) {
 		const element1 = res[index * 2];
 		const element2 = res[index * 2 + 1];
 
-		let faultHex = element1 + element2;
+		const faultHex = element1 + element2;
 
-		let faultNumber = parseInt(faultHex, 16);
-		let currentDBW = index * 2 + 16;
+		const faultNumber = parseInt(faultHex, 16);
+		const currentDBW = index * 2 + 16;
 
 		if (request.machineType == "Lidder" && request.line == 1) {
 			if (currentDBW > 52) {

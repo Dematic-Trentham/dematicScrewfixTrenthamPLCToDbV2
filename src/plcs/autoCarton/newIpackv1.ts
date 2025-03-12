@@ -5,7 +5,7 @@
 //Version: 1.0.0
 
 //list of faults and there locations
-let faults = [
+const faults = [
 	{ fault: "	D1 Emergency Stop	", location: "85.0", current: false },
 	{ fault: "	D2 Circuit Breaker	", location: "85.1", current: false },
 	{ fault: "	D3 Opened Door	", location: "85.2", current: false },

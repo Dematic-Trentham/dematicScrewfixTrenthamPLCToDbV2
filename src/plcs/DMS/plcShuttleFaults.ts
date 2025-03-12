@@ -8,598 +8,670 @@ import { getParameterFromDB } from "../../misc/getParameterFromDB.js";
 import plc from "../../misc/plc/plc.js";
 import snap7 from "node-snap7";
 import db from "../../db/db.js";
+import logger from "../../misc/logging.js";
 
 type currentFault = {
-  location: string;
-  fault: string;
-  id: string;
-  stillActive: boolean;
+	location: string;
+	fault: string;
+	id: string;
+	stillActive: boolean;
 };
 
 //currently in fault array
-let currentlyInFaultArray: { [key: string]: currentFault } = {};
+const currentlyInFaultArray: { [key: string]: currentFault } = {};
 
 //currently running
 let functionCurrentlyRunning = false;
 
 async function readShuttlesFaults() {
-  if (functionCurrentlyRunning) {
-    console.log("Function already running");
-    return;
-  }
+	if (functionCurrentlyRunning) {
+		logger.error("Function already running");
+		return;
+	}
 
-  functionCurrentlyRunning = true;
+	functionCurrentlyRunning = true;
 
-  //console.log("Reading Shuttles Faults");
+	//logger.error("Reading Shuttles Faults");
 
-  await checkDbForFaults();
+	await checkDbForFaults();
 
-  functionCurrentlyRunning = false;
+	functionCurrentlyRunning = false;
 }
 
 async function checkDbForFaults() {
-  //lets get the parameters from the database for the amount of aisles and levels
-  const amountOfAislesResult = await getParameterFromDB("dmsAmountOfAisles");
-  const amountOfLevelsResult = await getParameterFromDB("dmsAmountOfLevels");
-  const aisleBaseIPResult = await getParameterFromDB("dmsAisleBaseIP");
-  const aisleIPOffsetResult = await getParameterFromDB("dmsAisleIPOffset");
-  const dmsAisleFaultDBResult = await getParameterFromDB("dmsAisleFaultDB");
+	//lets get the parameters from the database for the amount of aisles and levels
+	const amountOfAislesResult = await getParameterFromDB("dmsAmountOfAisles");
+	const amountOfLevelsResult = await getParameterFromDB("dmsAmountOfLevels");
+	const aisleBaseIPResult = await getParameterFromDB("dmsAisleBaseIP");
+	const aisleIPOffsetResult = await getParameterFromDB("dmsAisleIPOffset");
+	const dmsAisleFaultDBResult = await getParameterFromDB("dmsAisleFaultDB");
 
-  const amountOfAisles = parseInt(amountOfAislesResult);
-  const amountOfLevels = parseInt(amountOfLevelsResult);
-  const aisleIPoffset = parseInt(aisleIPOffsetResult);
-  const dmsAisleFaultDB = parseInt(dmsAisleFaultDBResult);
+	const amountOfAisles = parseInt(amountOfAislesResult);
+	const amountOfLevels = parseInt(amountOfLevelsResult);
+	const aisleIPoffset = parseInt(aisleIPOffsetResult);
+	const dmsAisleFaultDB = parseInt(dmsAisleFaultDBResult);
 
-  //set all faults to not active
-  for (let location in currentlyInFaultArray) {
-    currentlyInFaultArray[location].stillActive = false;
-  }
+	//set all faults to not active
+	for (const location in currentlyInFaultArray) {
+		currentlyInFaultArray[location].stillActive = false;
+	}
 
-  for (var aisle = 1; aisle < amountOfAisles + 1; aisle++) {
-    //console.log(aisle);
-    //Loop through the 3 aisles
-    await checkAisleDBForFaults(aisle, amountOfLevels, aisleBaseIPResult, aisleIPoffset, dmsAisleFaultDB);
-  }
+	for (let aisle = 1; aisle < amountOfAisles + 1; aisle++) {
+		//logger.error(aisle);
+		//Loop through the 3 aisles
+		await checkAisleDBForFaults(
+			aisle,
+			amountOfLevels,
+			aisleBaseIPResult,
+			aisleIPoffset,
+			dmsAisleFaultDB
+		);
+	}
 
-  checkIfFaultsAreStillActive();
+	checkIfFaultsAreStillActive();
 
-  return true;
+	return true;
 }
 
-async function checkAisleDBForFaults(aisle: number, amountOfLevels: number, aisleBaseIP: string, aisleIPOffset: number, dmsFaultDB: number) {
-  let DBFaults = 2050;
+async function checkAisleDBForFaults(
+	aisle: number,
+	amountOfLevels: number,
+	aisleBaseIP: string,
+	aisleIPOffset: number,
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	dmsFaultDB: number
+) {
+	const DBFaults = 2050;
 
-  return new Promise((resolve, reject) => {
-    //length of each fault
-    let lengthOfFault = 28;
+	return new Promise((resolve, reject) => {
+		//length of each fault
+		const lengthOfFault = 28;
 
-    //total length of all faults
-    let totalLength = lengthOfFault * 1000;
+		//total length of all faults
+		let totalLength = lengthOfFault * 1000;
 
-    //add 2 for the amount of faults
-    totalLength = totalLength + 2;
+		//add 2 for the amount of faults
+		totalLength = totalLength + 2;
 
-    const ip = aisleBaseIP.toString() + (aisleIPOffset + aisle).toString().padStart(3, "0");
+		const ip =
+			aisleBaseIP.toString() +
+			(aisleIPOffset + aisle).toString().padStart(3, "0");
 
-    //connect to the plc
-    plc
-      .readFromS7DbRAW(ip, 0, 1, DBFaults, 0, totalLength)
-      .then(async (result) => {
-        //get the amount of faults
-        let amountOfFaults = s72BytesToNumber(result[0], result[1]);
+		//connect to the plc
+		plc
+			.readFromS7DbRAW(ip, 0, 1, DBFaults, 0, totalLength)
+			.then(async (result) => {
+				//get the amount of faults
+				const amountOfFaults = s72BytesToNumber(result[0], result[1]);
 
-        // console.log("Amount of faults: " + amountOfFaults);
+				// logger.error("Amount of faults: " + amountOfFaults);
 
-        //if we dont have any faults, return
-        if (amountOfFaults == 0) {
-          resolve("No faults");
-          return;
-        }
+				//if we dont have any faults, return
+				if (amountOfFaults == 0) {
+					resolve("No faults");
+					return;
+				}
 
-        //for each fault
-        for (let faultIndex = 0; faultIndex < amountOfFaults; faultIndex++) {
-          let offset = 2 + faultIndex * lengthOfFault;
+				//for each fault
+				for (let faultIndex = 0; faultIndex < amountOfFaults; faultIndex++) {
+					const offset = 2 + faultIndex * lengthOfFault;
 
-          let faultCode = s72BytesToNumber(result[offset + 18], result[offset + 18 + 1]).toString();
+					const faultCode = s72BytesToNumber(
+						result[offset + 18],
+						result[offset + 18 + 1]
+					).toString();
 
-          //console.log("Fault code:@@ " + faultCode);
+					//logger.error("Fault code:@@ " + faultCode);
 
-          //what location is this fault on?
-          let location = s72BytesToNumber(result[offset + 0], result[offset + 0 + 1]).toString();
+					//what location is this fault on?
+					let location = s72BytesToNumber(
+						result[offset + 0],
+						result[offset + 0 + 1]
+					).toString();
 
-          //add the aisle to the location
-          location = aisle + "-" + location;
+					//add the aisle to the location
+					location = aisle + "-" + location;
 
-          //console.log("Location: " + location);
+					//logger.error("Location: " + location);
 
-          //check if we are already in fault
-          if (currentlyInFaultArray[location] == undefined) {
-            //we are not in fault, add to the array
-            currentlyInFaultArray[location] = {
-              location: location,
-              fault: "false",
-              id: "",
-              stillActive: true,
-            };
-          }
+					//check if we are already in fault
+					if (currentlyInFaultArray[location] == undefined) {
+						//we are not in fault, add to the array
+						currentlyInFaultArray[location] = {
+							location: location,
+							fault: "false",
+							id: "",
+							stillActive: true,
+						};
+					}
 
-          //is this shuttle already in fault?
-          if (currentlyInFaultArray[location].fault == faultCode) {
-            //console.log("Shuttle is already in same fault");
-          } else {
-            //were we in a different fault before?
-            if (currentlyInFaultArray[location].fault != "false") {
-              // console.log("Shuttle was in fault before, now different fault");
-              await addFaultIntoDB(aisle, location, faultCode, ip);
-            } else {
-              //  console.log("Shuttle was not in fault before, now in fault");
+					//is this shuttle already in fault?
+					if (currentlyInFaultArray[location].fault == faultCode) {
+						//logger.error("Shuttle is already in same fault");
+					} else {
+						//were we in a different fault before?
+						if (currentlyInFaultArray[location].fault != "false") {
+							// logger.error("Shuttle was in fault before, now different fault");
+							await addFaultIntoDB(aisle, location, faultCode, ip);
+						} else {
+							//  logger.error("Shuttle was not in fault before, now in fault");
 
-              //build sql query to insert the fault into the database
+							//build sql query to insert the fault into the database
 
-              await addFaultIntoDB(aisle, location, faultCode, ip);
-            }
+							await addFaultIntoDB(aisle, location, faultCode, ip);
+						}
 
-            //set that this shuttle is in fault
-            currentlyInFaultArray[location].fault = faultCode;
-          }
+						//set that this shuttle is in fault
+						currentlyInFaultArray[location].fault = faultCode;
+					}
 
-          currentlyInFaultArray[location].stillActive = true;
+					currentlyInFaultArray[location].stillActive = true;
 
-          //console.log(currentlyInFault[location]);
-        }
+					//logger.error(currentlyInFault[location]);
+				}
 
-        resolve(result);
-      })
-      .catch((error) => {
-        console.log(error);
-        reject(error);
-      });
-  });
+				resolve(result);
+			})
+			.catch((error) => {
+				logger.error(error);
+				reject(error);
+			});
+	});
 }
 
 async function checkIfFaultsAreStillActive() {
-  //for each location in currentlyInFault
-  for (let location in currentlyInFaultArray) {
-    console.log(currentlyInFaultArray[location]);
+	//for each location in currentlyInFault
+	for (const location in currentlyInFaultArray) {
+		logger.error(currentlyInFaultArray[location]);
 
-    //if this fault is still active
-    if (currentlyInFaultArray[location].stillActive == false) {
-      // console.log("Fault is no longer active " + location + " - " + currentlyInFault[location].fault);
+		//if this fault is still active
+		if (currentlyInFaultArray[location].stillActive == false) {
+			// logger.error("Fault is no longer active " + location + " - " + currentlyInFault[location].fault);
 
-      //reset the fault
-      currentlyInFaultArray[location].fault = "false";
+			//reset the fault
+			currentlyInFaultArray[location].fault = "false";
 
-      db.dmsShuttleFaultLogs.update({
-        where: {
-          ID: currentlyInFaultArray[location].id.toString(),
-        },
-        data: {
-          resolvedTimestamp: new Date(),
-          resolvedReason: "automatic",
-        },
-      });
+			db.dmsShuttleFaultLogs.update({
+				where: {
+					ID: currentlyInFaultArray[location].id.toString(),
+				},
+				data: {
+					resolvedTimestamp: new Date(),
+					resolvedReason: "automatic",
+				},
+			});
 
-      //remove the fault from the array
-      delete currentlyInFaultArray[location];
-    }
-  }
+			//remove the fault from the array
+			delete currentlyInFaultArray[location];
+		}
+	}
 }
 
 clearAllFaults();
 //when starting, clear all faults in the db that are not resolved, "with a resolved timestamp"
 async function clearAllFaults() {
-  db.dmsShuttleFaultLogs.updateMany({
-    where: {
-      resolvedReason: "",
-    },
-    data: {
-      resolvedTimestamp: new Date(),
-      resolvedReason: "automatic",
-    },
-  });
-  console.log("Cleared all dms faults in db");
+	db.dmsShuttleFaultLogs.updateMany({
+		where: {
+			resolvedReason: "",
+		},
+		data: {
+			resolvedTimestamp: new Date(),
+			resolvedReason: "automatic",
+		},
+	});
+	logger.error("Cleared all dms faults in db");
 }
 
-async function addFaultIntoDB(aisle: number, location: string, fault: string, ip: string) {
-  //is the location a shuttle , starts with 19
-  if (!location.split("-")[1].startsWith("19")) {
-    return;
-  }
+async function addFaultIntoDB(
+	aisle: number,
+	location: string,
+	fault: string,
+	ip: string
+) {
+	//is the location a shuttle , starts with 19
+	if (!location.split("-")[1].startsWith("19")) {
+		return;
+	}
 
-  let offsetDBFaults = 78;
-  let levelPart = location.split("-")[1];
+	const offsetDBFaults = 78;
+	const levelPart = location.split("-")[1];
 
-  //get the level last 2 digits
-  let level = parseInt(levelPart.substring(levelPart.length - 2, levelPart.length));
-  let startOffset = (level - 1) * offsetDBFaults;
+	//get the level last 2 digits
+	const level = parseInt(
+		levelPart.substring(levelPart.length - 2, levelPart.length)
+	);
+	const startOffset = (level - 1) * offsetDBFaults;
 
-  console.log("Level part: " + levelPart);
+	logger.error("Level part: " + levelPart);
 
-  try {
-    //shuttle is in fault, get the info from the plc
-    let data = await plc.readFromS7DbRAW(ip, 0, 1, 836, startOffset, offsetDBFaults);
+	try {
+		//shuttle is in fault, get the info from the plc
+		const data = await plc.readFromS7DbRAW(
+			ip,
+			0,
+			1,
+			836,
+			startOffset,
+			offsetDBFaults
+		);
 
-    let macArray = await getShuttleData(aisle, level, ip);
+		const macArray = await getShuttleData(aisle, level, ip);
 
-    let xCoordinate = await getTheShuttleXCoordinate(aisle, level, ip);
+		const xCoordinate = await getTheShuttleXCoordinate(aisle, level, ip);
 
-    //lets make an array of the faults
-    let faults: Record<string, string | number | boolean> = {};
+		//lets make an array of the faults
+		const faults: Record<string, string | number | boolean> = {};
 
-    faults["LocalAisle"] = aisle.toString();
-    faults["LocalLevel"] = level.toString();
+		faults["LocalAisle"] = aisle.toString();
+		faults["LocalLevel"] = level.toString();
 
-    faults["aisle"] = data[0];
-    faults["level"] = data[1];
+		faults["aisle"] = data[0];
+		faults["level"] = data[1];
 
-    faults["mac"] = macArray["mac"];
+		faults["mac"] = macArray["mac"];
 
-    createShuttleMode(data, faults);
-    createShuttleStatus(faults, data);
-    createLoadStatus(faults, data);
-    createPositionStatus(faults, data);
-    createFingerStatus(faults, data);
+		createShuttleMode(data, faults);
+		createShuttleStatus(faults, data);
+		createLoadStatus(faults, data);
+		createPositionStatus(faults, data);
+		createFingerStatus(faults, data);
 
-    faults["RawOP"] = data[8];
+		faults["RawOP"] = data[8];
 
-    createOperationNotifications(faults, data);
+		createOperationNotifications(faults, data);
 
-    faults["rawFaultGroup"] = data[9];
-    faults["rawFaultNumber"] = data[10];
+		faults["rawFaultGroup"] = data[9];
+		faults["rawFaultNumber"] = data[10];
 
-    createFaults(faults, data);
+		createFaults(faults, data);
 
-    createOrderStep(faults, data);
+		createOrderStep(faults, data);
 
-    faults["activeOrderID"] = data[12];
-    faults["waitingOrderID"] = data[13];
+		faults["activeOrderID"] = data[12];
+		faults["waitingOrderID"] = data[13];
 
-    faults["currentX_pos"] = s74BytesToNumber(data[16], data[17], data[18], data[19]);
-    faults["currentX_speed"] = s72BytesToNumber(data[20], data[21]);
+		faults["currentX_pos"] = s74BytesToNumber(
+			data[16],
+			data[17],
+			data[18],
+			data[19]
+		);
+		faults["currentX_speed"] = s72BytesToNumber(data[20], data[21]);
 
-    faults["currentW_pos"] = s72BytesToNumberSigned(data[22], data[23]);
-    faults["currentW_speed"] = s72BytesToNumber(data[24], data[25]);
+		faults["currentW_pos"] = s72BytesToNumberSigned(data[22], data[23]);
+		faults["currentW_speed"] = s72BytesToNumber(data[24], data[25]);
 
-    // currentZ1_pos is a 2 byte signed int
-    faults["currentZ1_pos"] = s72BytesToNumberSigned(data[26], data[27]);
+		// currentZ1_pos is a 2 byte signed int
+		faults["currentZ1_pos"] = s72BytesToNumberSigned(data[26], data[27]);
 
-    faults["currentZ1_speed"] = s72BytesToNumber(data[28], data[29]);
+		faults["currentZ1_speed"] = s72BytesToNumber(data[28], data[29]);
 
-    faults["currentZ2_pos"] = s72BytesToNumber(data[30], data[31]);
-    faults["currentZ2_speed"] = s72BytesToNumber(data[32], data[33]);
+		faults["currentZ2_pos"] = s72BytesToNumber(data[30], data[31]);
+		faults["currentZ2_speed"] = s72BytesToNumber(data[32], data[33]);
 
-    const shuttleID = await db.dmsShuttleLocations.findFirst({
-      where: {
-        macAddress: faults["mac"].toString(),
-      },
-    });
+		const shuttleID = await db.dmsShuttleLocations.findFirst({
+			where: {
+				macAddress: faults["mac"].toString(),
+			},
+		});
 
-    if (faults["mac"] == null || shuttleID == null) {
-      return;
-    }
+		if (faults["mac"] == null || shuttleID == null) {
+			return;
+		}
 
-    const result = await db.dmsShuttleFaultLogs.create({
-      data: {
-        timestamp: new Date(),
-        aisle: aisle,
-        level: level,
-        macAddress: faults["mac"].toString(),
-        shuttleID: shuttleID.shuttleID,
-        faultCode: fault,
-        xLocation: faults["currentX_pos"],
-        ZLocation: faults["currentZ1_pos"],
-        WLocation: faults["currentW_pos"],
-        resolvedReason: "",
-        resolvedTimestamp: new Date(),
-        xCoordinate: xCoordinate.xCord,
-        rawInfo: JSON.stringify(faults),
-      },
-    });
+		const result = await db.dmsShuttleFaultLogs.create({
+			data: {
+				timestamp: new Date(),
+				aisle: aisle,
+				level: level,
+				macAddress: faults["mac"].toString(),
+				shuttleID: shuttleID.shuttleID,
+				faultCode: fault,
+				xLocation: faults["currentX_pos"],
+				ZLocation: faults["currentZ1_pos"],
+				WLocation: faults["currentW_pos"],
+				resolvedReason: "",
+				resolvedTimestamp: new Date(),
+				xCoordinate: xCoordinate.xCord,
+				rawInfo: JSON.stringify(faults),
+			},
+		});
 
-    console.log(result);
+		logger.error(result);
 
-    //update the id of the fault in the array
-    currentlyInFaultArray[location].id = result.ID;
-  } catch (error) {
-    console.log("Error in addFaultIntoDB");
-    console.log(error);
-  }
+		//update the id of the fault in the array
+		currentlyInFaultArray[location].id = result.ID;
+	} catch (error) {
+		logger.error("Error in addFaultIntoDB");
+		logger.error(error);
+	}
 }
 
 function getShuttleData(aisle: number, level: number, ip: string) {
-  return new Promise<any>(function (resolve, reject) {
-    let plcConnection = new snap7.S7Client();
+	return new Promise<any>(function (resolve, reject) {
+		const plcConnection = new snap7.S7Client();
 
-    plcConnection.ConnectTo(ip, 0, 1, async function (err) {
-      if (err) reject(plcConnection.ErrorText(err));
+		plcConnection.ConnectTo(ip, 0, 1, async function (err) {
+			if (err) reject(plcConnection.ErrorText(err));
 
-      plcConnection.ReadArea(0x84, 2850 + level, 1528, 8, 0x02, function (err, data) {
-        if (err) reject(plcConnection.ErrorText(err));
+			plcConnection.ReadArea(
+				0x84,
+				2850 + level,
+				1528,
+				8,
+				0x02,
+				function (err, data) {
+					if (err) reject(plcConnection.ErrorText(err));
 
-        let tempArray = {
-          aisle: aisle,
-          level: level,
-          mac: stringToCapital(toHexString(data)),
-        };
-        resolve(tempArray);
-      });
-    });
+					const tempArray = {
+						aisle: aisle,
+						level: level,
+						mac: stringToCapital(toHexString(data)),
+					};
+					resolve(tempArray);
+				}
+			);
+		});
 
-    //return promise;
-  });
+		//return promise;
+	});
 }
 
 function getTheShuttleXCoordinate(aisle: number, level: number, ip: string) {
-  return new Promise<any>(function (resolve, reject) {
-    let plcConnection = new snap7.S7Client();
+	return new Promise<any>(function (resolve, reject) {
+		const plcConnection = new snap7.S7Client();
 
-    //console.log("Connecting to here");
+		//logger.error("Connecting to here");
 
-    plcConnection.ConnectTo(ip, 0, 1, async function (err) {
-      if (err) reject(plcConnection.ErrorText(err) + ":(2");
+		plcConnection.ConnectTo(ip, 0, 1, async function (err) {
+			if (err) reject(plcConnection.ErrorText(err) + ":(2");
 
-      //caculate the offset to the x coordinate
-      let starting = 36418;
-      let next = 36694;
+			//caculate the offset to the x coordinate
+			const starting = 36418;
+			const next = 36694;
 
-      let different = next - starting;
+			const different = next - starting;
 
-      let offset = starting + (level - 1) * different;
+			const offset = starting + (level - 1) * different;
 
-      plcConnection.ReadArea(0x84, 2013, offset, 1, 4, function (err, data) {
-        if (err) reject(plcConnection.ErrorText(err) + ":(");
+			plcConnection.ReadArea(0x84, 2013, offset, 1, 4, function (err, data) {
+				if (err) reject(plcConnection.ErrorText(err) + ":(");
 
-        //  console.log(data);
+				//  logger.error(data);
 
-        let tempArray = {
-          aisle: aisle,
-          level: level,
-          xCord: s72BytesToNumber(data[0], data[1]),
-        };
+				const tempArray = {
+					aisle: aisle,
+					level: level,
+					xCord: s72BytesToNumber(data[0], data[1]),
+				};
 
-        //console.log("here 2");
-        resolve(tempArray);
-      });
-    });
-  });
+				//logger.error("here 2");
+				resolve(tempArray);
+			});
+		});
+	});
 }
 
-function createOrderStep(faults: Record<string, string | number | boolean>, data: Buffer) {
-  faults["orderStep"] = data[11];
-  //0 = no order, 1 = order running, 2 = order finished, 3 = order aborted
-  switch (data[11]) {
-    case 1:
-      faults["orderStep"] = "Order running";
-      break;
-    case 2:
-      faults["orderStep"] = "Order finished";
-      break;
-    case 3:
-      faults["orderStep"] = "Order aborted";
-      break;
-    default:
-      faults["orderStep"] = "No order";
-      break;
-  }
+function createOrderStep(
+	faults: Record<string, string | number | boolean>,
+	data: Buffer
+) {
+	faults["orderStep"] = data[11];
+	//0 = no order, 1 = order running, 2 = order finished, 3 = order aborted
+	switch (data[11]) {
+		case 1:
+			faults["orderStep"] = "Order running";
+			break;
+		case 2:
+			faults["orderStep"] = "Order finished";
+			break;
+		case 3:
+			faults["orderStep"] = "Order aborted";
+			break;
+		default:
+			faults["orderStep"] = "No order";
+			break;
+	}
 }
 
-function createShuttleMode(data: Buffer, faults: Record<string, string | number | boolean>) {
-  //faults["mode"] = data[2];
-  //if the mode is 1 then we are in auto mode, 2 is manual mode
-  if (data[2] == 1) {
-    faults["mode"] = "Auto";
-  } else if (data[2] == 2) {
-    faults["mode"] = "Manual";
-  }
+function createShuttleMode(
+	data: Buffer,
+	faults: Record<string, string | number | boolean>
+) {
+	//faults["mode"] = data[2];
+	//if the mode is 1 then we are in auto mode, 2 is manual mode
+	if (data[2] == 1) {
+		faults["mode"] = "Auto";
+	} else if (data[2] == 2) {
+		faults["mode"] = "Manual";
+	}
 }
 
-function createFaults(faults: Record<string, string | number | boolean>, data: Buffer) {
-  faults["faultGroup"] = data[9];
-  faults["faultNumber"] = data[10];
+function createFaults(
+	faults: Record<string, string | number | boolean>,
+	data: Buffer
+) {
+	faults["faultGroup"] = data[9];
+	faults["faultNumber"] = data[10];
 
-  // 25	System faults
-  // 26	General faults
-  // 27	X axis faults
-  // 28	Z1 axis faults
-  // 29	Z2 axis faults
-  // 30	W axis faults
+	// 25	System faults
+	// 26	General faults
+	// 27	X axis faults
+	// 28	Z1 axis faults
+	// 29	Z2 axis faults
+	// 30	W axis faults
 }
 
-function createOperationNotifications(faults: Record<string, string | number | boolean>, data: Buffer) {
-  faults["operatingNotification"] = data[8];
+function createOperationNotifications(
+	faults: Record<string, string | number | boolean>,
+	data: Buffer
+) {
+	faults["operatingNotification"] = data[8];
 
-  //1	Automatic order in manual mode not allowed
-  // 2	Manual order in automatic mode not allowed
-  // 3	Manual order not allowed, another axis is already running
-  // 4	New order but shuttle is faulted
-  // 5	Telescope is not in center position
-  // 6	X-Axis is not in position
-  // 7	Fingers are not in position
-  // 8	Axes are not ready
-  // 9	X-Axis is not taught
-  // 11	Order data are not complete
-  // 51	Homing, but homing still active
-  // 52	Teaching, but teaching still active
-  // 53	Teaching, but down-loading still active
-  // 54	Positioning, but positioning still active
-  // 55	Pick, but pick still active
-  // 56	Drop, but drop still active
-  // 57	Shift, but shift still active
+	//1	Automatic order in manual mode not allowed
+	// 2	Manual order in automatic mode not allowed
+	// 3	Manual order not allowed, another axis is already running
+	// 4	New order but shuttle is faulted
+	// 5	Telescope is not in center position
+	// 6	X-Axis is not in position
+	// 7	Fingers are not in position
+	// 8	Axes are not ready
+	// 9	X-Axis is not taught
+	// 11	Order data are not complete
+	// 51	Homing, but homing still active
+	// 52	Teaching, but teaching still active
+	// 53	Teaching, but down-loading still active
+	// 54	Positioning, but positioning still active
+	// 55	Pick, but pick still active
+	// 56	Drop, but drop still active
+	// 57	Shift, but shift still active
 
-  switch (data[8]) {
-    case 1:
-      faults["operatingNotification"] = "Automatic order in manual mode not allowed";
-      break;
-    case 2:
-      faults["operatingNotification"] = "Manual order in automatic mode not allowed";
-      break;
-    case 3:
-      faults["operatingNotification"] = "Manual order not allowed, another axis is already running";
-      break;
-    case 4:
-      faults["operatingNotification"] = "New order but shuttle is faulted";
-      break;
-    case 5:
-      faults["operatingNotification"] = "Telescope is not in center position";
-      break;
-    case 6:
-      faults["operatingNotification"] = "X-Axis is not in position";
-      break;
-    case 7:
-      faults["operatingNotification"] = "Fingers are not in position";
-      break;
-    case 8:
-      faults["operatingNotification"] = "Axes are not ready";
-      break;
-    case 9:
-      faults["operatingNotification"] = "X-Axis is not taught";
-      break;
-    case 11:
-      faults["operatingNotification"] = "Order data are not complete";
-      break;
-    case 51:
-      faults["operatingNotification"] = "Homing, but homing still active";
-      break;
-    case 52:
-      faults["operatingNotification"] = "Teaching, but teaching still active";
-      break;
-    case 53:
-      faults["operatingNotification"] = "Teaching, but down-loading still active";
-      break;
-    case 54:
-      faults["operatingNotification"] = "Positioning, but positioning still active";
-      break;
-    case 55:
-      faults["operatingNotification"] = "Pick, but pick still active";
-      break;
-    case 56:
-      faults["operatingNotification"] = "Drop, but drop still active";
-      break;
-    case 57:
-      faults["operatingNotification"] = "Shift, but shift still active";
-      break;
-    default:
-      faults["operatingNotification"] = "No operating notification";
-      break;
-  }
+	switch (data[8]) {
+		case 1:
+			faults["operatingNotification"] =
+				"Automatic order in manual mode not allowed";
+			break;
+		case 2:
+			faults["operatingNotification"] =
+				"Manual order in automatic mode not allowed";
+			break;
+		case 3:
+			faults["operatingNotification"] =
+				"Manual order not allowed, another axis is already running";
+			break;
+		case 4:
+			faults["operatingNotification"] = "New order but shuttle is faulted";
+			break;
+		case 5:
+			faults["operatingNotification"] = "Telescope is not in center position";
+			break;
+		case 6:
+			faults["operatingNotification"] = "X-Axis is not in position";
+			break;
+		case 7:
+			faults["operatingNotification"] = "Fingers are not in position";
+			break;
+		case 8:
+			faults["operatingNotification"] = "Axes are not ready";
+			break;
+		case 9:
+			faults["operatingNotification"] = "X-Axis is not taught";
+			break;
+		case 11:
+			faults["operatingNotification"] = "Order data are not complete";
+			break;
+		case 51:
+			faults["operatingNotification"] = "Homing, but homing still active";
+			break;
+		case 52:
+			faults["operatingNotification"] = "Teaching, but teaching still active";
+			break;
+		case 53:
+			faults["operatingNotification"] =
+				"Teaching, but down-loading still active";
+			break;
+		case 54:
+			faults["operatingNotification"] =
+				"Positioning, but positioning still active";
+			break;
+		case 55:
+			faults["operatingNotification"] = "Pick, but pick still active";
+			break;
+		case 56:
+			faults["operatingNotification"] = "Drop, but drop still active";
+			break;
+		case 57:
+			faults["operatingNotification"] = "Shift, but shift still active";
+			break;
+		default:
+			faults["operatingNotification"] = "No operating notification";
+			break;
+	}
 }
 
-function createFingerStatus(faults: Record<string, string | number | boolean | any>, data: Buffer) {
-  faults["fingerStatus"] = {};
-  faults["fingerStatus"]["fingerUpStatus"] = {};
-  //bit0 = pair 1 up, bit1 = pair 2 up, bit2 = pair 3 up, bit3 = pair 4 up
-  //turn byte into bits
-  let fingerUpStatus = data[6].toString(2).padStart(8, "0");
-  faults["fingerStatus"]["fingerUpStatus"].pair1 = fingerUpStatus[7] === "1" ? "Yes" : "No";
-  faults["fingerStatus"]["fingerUpStatus"].pair2 = fingerUpStatus[6] === "1" ? "Yes" : "No";
-  faults["fingerStatus"]["fingerUpStatus"].pair3 = fingerUpStatus[5] === "1" ? "Yes" : "No";
-  faults["fingerStatus"]["fingerUpStatus"].pair4 = fingerUpStatus[4] === "1" ? "Yes" : "No";
+function createFingerStatus(
+	faults: Record<string, string | number | boolean | any>,
+	data: Buffer
+) {
+	faults["fingerStatus"] = {};
+	faults["fingerStatus"]["fingerUpStatus"] = {};
+	//bit0 = pair 1 up, bit1 = pair 2 up, bit2 = pair 3 up, bit3 = pair 4 up
+	//turn byte into bits
+	const fingerUpStatus = data[6].toString(2).padStart(8, "0");
+	faults["fingerStatus"]["fingerUpStatus"].pair1 =
+		fingerUpStatus[7] === "1" ? "Yes" : "No";
+	faults["fingerStatus"]["fingerUpStatus"].pair2 =
+		fingerUpStatus[6] === "1" ? "Yes" : "No";
+	faults["fingerStatus"]["fingerUpStatus"].pair3 =
+		fingerUpStatus[5] === "1" ? "Yes" : "No";
+	faults["fingerStatus"]["fingerUpStatus"].pair4 =
+		fingerUpStatus[4] === "1" ? "Yes" : "No";
 
-  faults["fingerStatus"]["fingerDownStatus"] = {};
-  //bit0 = pair 1 down, bit1 = pair 2 down, bit2 = pair 3 down, bit3 = pair 4 down
-  //turn byte into bits
-  let fingerDownStatus = data[7].toString(2).padStart(8, "0");
-  faults["fingerStatus"]["fingerDownStatus"].pair1 = fingerDownStatus[7] === "1" ? "Yes" : "No";
-  faults["fingerStatus"]["fingerDownStatus"].pair2 = fingerDownStatus[6] === "1" ? "Yes" : "No";
-  faults["fingerStatus"]["fingerDownStatus"].pair3 = fingerDownStatus[5] === "1" ? "Yes" : "No";
-  faults["fingerStatus"]["fingerDownStatus"].pair4 = fingerDownStatus[4] === "1" ? "Yes" : "No";
+	faults["fingerStatus"]["fingerDownStatus"] = {};
+	//bit0 = pair 1 down, bit1 = pair 2 down, bit2 = pair 3 down, bit3 = pair 4 down
+	//turn byte into bits
+	const fingerDownStatus = data[7].toString(2).padStart(8, "0");
+	faults["fingerStatus"]["fingerDownStatus"].pair1 =
+		fingerDownStatus[7] === "1" ? "Yes" : "No";
+	faults["fingerStatus"]["fingerDownStatus"].pair2 =
+		fingerDownStatus[6] === "1" ? "Yes" : "No";
+	faults["fingerStatus"]["fingerDownStatus"].pair3 =
+		fingerDownStatus[5] === "1" ? "Yes" : "No";
+	faults["fingerStatus"]["fingerDownStatus"].pair4 =
+		fingerDownStatus[4] === "1" ? "Yes" : "No";
 }
 
-function createPositionStatus(faults: Record<string, string | number | boolean | any>, data: Buffer) {
-  faults["positionStatus"] = {};
-  //bit0 = x positioned on target, bit1 = z centered, bit3 = w positioned on target
-  let positionStatus = data[5].toString(2).padStart(8, "0");
-  faults["positionStatus"].xPositioned = positionStatus[7] === "1" ? "Yes" : "No";
-  faults["positionStatus"].zCentered = positionStatus[6] === "1" ? "Yes" : "No";
-  faults["positionStatus"].wPositioned = positionStatus[4] === "1" ? "Yes" : "No";
+function createPositionStatus(
+	faults: Record<string, string | number | boolean | any>,
+	data: Buffer
+) {
+	faults["positionStatus"] = {};
+	//bit0 = x positioned on target, bit1 = z centered, bit3 = w positioned on target
+	const positionStatus = data[5].toString(2).padStart(8, "0");
+	faults["positionStatus"].xPositioned =
+		positionStatus[7] === "1" ? "Yes" : "No";
+	faults["positionStatus"].zCentered = positionStatus[6] === "1" ? "Yes" : "No";
+	faults["positionStatus"].wPositioned =
+		positionStatus[4] === "1" ? "Yes" : "No";
 }
 
-function createLoadStatus(faults: Record<string, string | number | boolean | any>, data: Buffer) {
-  faults["loadStatus"] = {};
-  //0 = not loaded, bit0 = sensor 1 blocked, bit1 = sensor 2 blocked
-  //turn byte into bits
-  let loadStatus = data[4].toString(2).padStart(8, "0");
+function createLoadStatus(
+	faults: Record<string, string | number | boolean | any>,
+	data: Buffer
+) {
+	faults["loadStatus"] = {};
+	//0 = not loaded, bit0 = sensor 1 blocked, bit1 = sensor 2 blocked
+	//turn byte into bits
+	const loadStatus = data[4].toString(2).padStart(8, "0");
 
-  //console.log(loadStatus);
-  //if the bit is 1 then the shuttle is configured
-  faults["loadStatus"].loaded = loadStatus[7] === "1" ? "Yes" : "No";
-  faults["loadStatus"].sensor1Blocked = loadStatus[0] === "1" ? "Yes" : "No";
-  faults["loadStatus"].sensor2Blocked = loadStatus[1] === "1" ? "Yes" : "No";
+	//logger.error(loadStatus);
+	//if the bit is 1 then the shuttle is configured
+	faults["loadStatus"].loaded = loadStatus[7] === "1" ? "Yes" : "No";
+	faults["loadStatus"].sensor1Blocked = loadStatus[0] === "1" ? "Yes" : "No";
+	faults["loadStatus"].sensor2Blocked = loadStatus[1] === "1" ? "Yes" : "No";
 }
 
-function createShuttleStatus(faults: Record<string, string | number | boolean | any>, data: Buffer) {
-  faults["shuttleStatus"] = {};
-  //shuttle status - bit0 = configured, bit1 = homed, bit2 = taught, bit3 = on lift, bit5 = maint v
-  //turn byte into bits
-  let shuttleStatus = data[3].toString(2).padStart(8, "0");
-  faults["shuttleStatus"].configured = shuttleStatus[7] === "1" ? "Yes" : "No";
-  faults["shuttleStatus"].homed = shuttleStatus[6] === "1" ? "Yes" : "No";
-  faults["shuttleStatus"].taught = shuttleStatus[5] === "1" ? "Yes" : "No";
-  faults["shuttleStatus"].onLift = shuttleStatus[4] === "1" ? "Yes" : "No";
-  faults["shuttleStatus"].maintMode = shuttleStatus[2] === "1" ? "Yes" : "No";
+function createShuttleStatus(
+	faults: Record<string, string | number | boolean | any>,
+	data: Buffer
+) {
+	faults["shuttleStatus"] = {};
+	//shuttle status - bit0 = configured, bit1 = homed, bit2 = taught, bit3 = on lift, bit5 = maint v
+	//turn byte into bits
+	const shuttleStatus = data[3].toString(2).padStart(8, "0");
+	faults["shuttleStatus"].configured = shuttleStatus[7] === "1" ? "Yes" : "No";
+	faults["shuttleStatus"].homed = shuttleStatus[6] === "1" ? "Yes" : "No";
+	faults["shuttleStatus"].taught = shuttleStatus[5] === "1" ? "Yes" : "No";
+	faults["shuttleStatus"].onLift = shuttleStatus[4] === "1" ? "Yes" : "No";
+	faults["shuttleStatus"].maintMode = shuttleStatus[2] === "1" ? "Yes" : "No";
 }
 
 //s7 dint to number
-function s7DintToNumber(buffer: Buffer) {
-  //convert the buffer to a number
-  let value = buffer.readInt32BE();
-
-  //return the value
-  return value;
-}
 
 function s72BytesToNumberSigned(byte1: number, byte2: number) {
-  //combine the bytes and read as readUInt32BE
-  //make into buffer
-  const buffer = Buffer.from([byte1, byte2]);
+	//combine the bytes and read as readUInt32BE
+	//make into buffer
+	const buffer = Buffer.from([byte1, byte2]);
 
-  return buffer.readInt16BE(0);
+	return buffer.readInt16BE(0);
 }
 
 //s7 dint to number
-function s74BytesToNumber(byte1: number, byte2: number, byte3: number, byte4: number) {
-  //combine the bytes and read as readUInt32BE
-  //make into buffer
-  const buffer = Buffer.from([byte1, byte2, byte3, byte4]);
+function s74BytesToNumber(
+	byte1: number,
+	byte2: number,
+	byte3: number,
+	byte4: number
+) {
+	//combine the bytes and read as readUInt32BE
+	//make into buffer
+	const buffer = Buffer.from([byte1, byte2, byte3, byte4]);
 
-  return buffer.readUInt32BE();
+	return buffer.readUInt32BE();
 }
 
 //s7 dint to number
 function s72BytesToNumber(byte1: number, byte2: number) {
-  //combine the bytes and read as readUInt32BE
-  //make into buffer
-  const buffer = Buffer.from([byte1, byte2]);
+	//combine the bytes and read as readUInt32BE
+	//make into buffer
+	const buffer = Buffer.from([byte1, byte2]);
 
-  return buffer.readUInt16BE();
+	return buffer.readUInt16BE();
 }
 
 //s7 byte to number
-function s7ByteToNumber(buffer: Buffer) {
-  //convert the buffer to a number
-  let value = buffer.readInt8();
-
-  //return the value
-  return value;
-}
 
 export default { readShuttlesFaults };
-function paddy(num: string, padlen: number, padchar?: string) {
-  var pad_char = typeof padchar !== "undefined" ? padchar : "0";
-  var pad = new Array(1 + padlen).join(pad_char);
-  return (pad + num).slice(-pad.length);
-}
 
 function stringToCapital(string: string) {
-  return string.toUpperCase();
+	return string.toUpperCase();
 }
 
 function toHexString(byteArray: Buffer) {
-  if (byteArray == null || byteArray.length == 0) return "";
-  if (byteArray.length == 0) return "";
-  var result = "";
+	if (byteArray == null || byteArray.length == 0) return "";
+	if (byteArray.length == 0) return "";
 
-  return Array.from(byteArray, function (byte) {
-    return ("0" + (byte & 0xff).toString(16)).slice(-2);
-  }).join(" ");
+	return Array.from(byteArray, function (byte) {
+		return ("0" + (byte & 0xff).toString(16)).slice(-2);
+	}).join(" ");
 }

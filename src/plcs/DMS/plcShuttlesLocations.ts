@@ -4,21 +4,17 @@
 //Last modified: 2024/09/12 17:00:22
 //Version: 0.0.1
 
-import plcToDB from "../../misc/plcToDB.js";
-
-import moment from "moment";
-
 import snap7 from "node-snap7";
-var s7client = new snap7.S7Client();
+const s7client = new snap7.S7Client();
 
 //import types
-import snap7Types from "../../misc/plc/types.js";
 import db from "../../db/db.js";
 import { getParameterFromDB } from "../../misc/getParameterFromDB.js";
+import logger from "../../misc/logging.js";
 
 //function to be called by the main program every 10 minutes
 async function readShuttlesToDB() {
-	//console.log("Reading Shuttles to DB");
+	//logger.error("Reading Shuttles to DB");
 
 	//lets get the parameters from the database for the amount of aisles and levels
 	const amountOfAislesResult = await getParameterFromDB("dmsAmountOfAisles");
@@ -35,8 +31,8 @@ async function readShuttlesToDB() {
 	const aisleBaseIP = aisleBaseIPResult;
 	const aisleBaseLocationDB = parseInt(aisleBaseLocationDBResult);
 
-	for (var aisle = 1; aisle < amountOfAisles + 1; aisle++) {
-		//console.log(aisle);
+	for (let aisle = 1; aisle < amountOfAisles + 1; aisle++) {
+		//logger.error(aisle);
 		//Loop through the 3 aisles
 		await GetAisle(
 			aisle,
@@ -47,7 +43,7 @@ async function readShuttlesToDB() {
 		);
 	}
 
-	// console.log("Finished reading shuttles");
+	// logger.error("Finished reading shuttles");
 	return true;
 }
 
@@ -58,9 +54,9 @@ async function GetAisle(
 	aisleIPOffset: number,
 	aisleBaseLocationDB: number
 ) {
-	for (var level = 1; level < amountOfLevels + 1; level++) {
+	for (let level = 1; level < amountOfLevels + 1; level++) {
 		try {
-			let dataMac = await getShuttleData(
+			const dataMac = await getShuttleData(
 				aisle,
 				level,
 				aisleBaseIP,
@@ -68,14 +64,13 @@ async function GetAisle(
 				aisleBaseLocationDB
 			);
 
-			// console.log("Aisle: " + dataMac.aisle + " Level: " + dataMac.level + " Mac: " + dataMac.mac);
+			// logger.error("Aisle: " + dataMac.aisle + " Level: " + dataMac.level + " Mac: " + dataMac.mac);
 
-			let timeStampOld = moment(new Date()).format("YYYY-MM-DD HH:mm:ss");
-			let timeStamp = new Date().toISOString();
+			const timeStamp = new Date().toISOString();
 
 			//before we update the database, check if that location is in use
 			//update the shuttle locations table NEW
-			let oldShuttleInLocation = await db.dmsShuttleLocations.findFirst({
+			const oldShuttleInLocation = await db.dmsShuttleLocations.findFirst({
 				where: {
 					currentLocation: `MSAI${paddy(dataMac.aisle, 2)}LV${paddy(dataMac.level, 2)}SH01`,
 				},
@@ -128,9 +123,9 @@ async function GetAisle(
 				});
 			}
 		} catch (err) {
-			console.log("Error reading shuttle data");
-			console.log("Aisle: " + aisle + " Level: " + level);
-			console.log(err);
+			logger.error("Error reading shuttle data");
+			logger.error("Aisle: " + aisle + " Level: " + level);
+			logger.error(err);
 		}
 	}
 }
@@ -157,7 +152,7 @@ function getShuttleData(
 				function (err, data) {
 					if (err) reject(s7client.ErrorText(err));
 
-					let tempArray = {
+					const tempArray = {
 						aisle: aisle,
 						level: level,
 						mac: stringToCapital(toHexString(data)),
@@ -178,22 +173,15 @@ function stringToCapital(string: string) {
 function toHexString(byteArray: Buffer) {
 	if (byteArray == null || byteArray.length == 0) return "";
 	if (byteArray.length == 0) return "";
-	var result = "";
 
 	return Array.from(byteArray, function (byte) {
 		return ("0" + (byte & 0xff).toString(16)).slice(-2);
 	}).join(" ");
 }
 function paddy(n: string, p: number, c?: undefined) {
-	var pad_char = typeof c !== "undefined" ? c : "0";
-	var pad = new Array(1 + p).join(pad_char);
+	const pad_char = typeof c !== "undefined" ? c : "0";
+	const pad = new Array(1 + p).join(pad_char);
 	return (pad + n).slice(-pad.length);
-}
-
-async function sleep(ms: number) {
-	return new Promise((resolve) => {
-		setTimeout(resolve, ms);
-	});
 }
 
 export default { readShuttlesToDB };

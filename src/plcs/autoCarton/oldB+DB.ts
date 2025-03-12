@@ -5,13 +5,20 @@ import snap7Types from "./../../misc/plc/types.js";
 import { addFaultsToDB } from "./faultAdder.js";
 
 //make array of machines to store the faults
-let machines: any = [];
+
+const machines: {
+	watchDogTimer: Date;
+	machineType: autoCartonMachineType;
+	line: number;
+	boxCount: number;
+	faults: { fault: string; location: string; current: boolean }[];
+}[] = [];
 
 async function getAndInsertFaultsDB(
 	ip: string,
 	machineType: autoCartonMachineType,
 	line: number,
-	faults: any,
+	faults: { fault: string; location: string; current: boolean }[],
 	faultDBNumber: number,
 	boxCountDb: number,
 	boxCountWord: number
@@ -20,7 +27,7 @@ async function getAndInsertFaultsDB(
 	let machineExists = false;
 
 	//for each machine in the machines array check if the machine exists
-	for (let m in machines) {
+	for (const m in machines) {
 		//if the machine exists then set machineExists to true
 		if (machines[m].machineType == machineType && machines[m].line == line) {
 			machineExists = true;
@@ -31,7 +38,7 @@ async function getAndInsertFaultsDB(
 	//if the machine does not exist then add it to the array
 	if (!machineExists) {
 		//time now for watchdog timer
-		let timeNow = new Date();
+		const timeNow = new Date();
 
 		machines.push({
 			watchDogTimer: timeNow,
@@ -43,13 +50,13 @@ async function getAndInsertFaultsDB(
 	}
 
 	//get the index of the machine in the array
-	let machineIndex = machines.findIndex(
-		(machine: any) => machine.machineType == machineType && machine.line == line
+	const machineIndex = machines.findIndex(
+		(machine) => machine.machineType == machineType && machine.line == line
 	);
 
-	let currentMachineFaults = machines[machineIndex].faults;
+	const currentMachineFaults = machines[machineIndex].faults;
 
-	let markerBytes = await plc.readFromS7DBToBuffer(
+	const markerBytes = await plc.readFromS7DBToBuffer(
 		ip,
 		0,
 		2,
@@ -59,9 +66,9 @@ async function getAndInsertFaultsDB(
 	);
 
 	//loop through each fault and check if the bit is true
-	for (let f in currentMachineFaults) {
+	for (const f in currentMachineFaults) {
 		//get the bit value for the fault
-		let bitValue = await plc.bufferToBit2(
+		const bitValue = await plc.bufferToBit2(
 			markerBytes,
 			currentMachineFaults[f].location
 		);
@@ -80,7 +87,7 @@ async function getAndInsertFaultsDB(
 	//lets count the number of boxes and if we have a new box then insert into DB
 
 	//read double word from PLC
-	let doubleWordValue = await plc.readFromS7DBToInt2(
+	const doubleWordValue = await plc.readFromS7DBToInt2(
 		ip,
 		0,
 		2,
@@ -95,7 +102,7 @@ async function getAndInsertFaultsDB(
 	if (machines[machineIndex].boxCount != doubleWordValue) {
 		if (machines[machineIndex].boxCount != 0) {
 			//repeat the insert to match the difference in box count
-			let difference = doubleWordValue - machines[machineIndex].boxCount;
+			const difference = doubleWordValue - machines[machineIndex].boxCount;
 
 			//update the watchdog timer
 			machines[machineIndex].watchDogTimer = new Date();

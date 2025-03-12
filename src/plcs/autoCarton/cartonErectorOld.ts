@@ -11,7 +11,7 @@ import { addFaultsToDB } from "./faultAdder.js";
 //import snap7Types from "../../misc/plc/types.js";
 
 //list of faults and there locations
-let faults = [
+const faults = [
 	{ fault: "[064] - Emergency Stop", location: "41.0", current: false },
 	{
 		fault: "[065] - Circuit-Breaker - Motors Default",
@@ -80,7 +80,7 @@ async function getAndInsertFaultsForOldErector(
 	await oldBPlusDB.getAndInsertFaultsDB(ip, machineType, line, faults, 9, 6, 2);
 
 	//get the general fault of the machine
-	let generalFault = await plc.readFromMarkerBit(ip, 0, 2, 0, 1);
+	const generalFault = await plc.readFromMarkerBit(ip, 0, 2, 0, 1);
 
 	//if the general fault is true and the test fault is false then insert the fault into the DB
 	if (generalFault == 1 && testFault == false) {

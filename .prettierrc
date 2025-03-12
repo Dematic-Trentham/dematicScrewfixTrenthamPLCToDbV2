@@ -11,5 +11,6 @@
 	"arrowParens": "always",
 	"proseWrap": "never",
 	"htmlWhitespaceSensitivity": "css",
-	"endOfLine": "auto"
+	"endOfLine": "auto",
+	"noConsole": "warn"
 }

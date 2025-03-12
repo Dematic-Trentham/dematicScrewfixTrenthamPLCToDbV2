@@ -18,7 +18,9 @@
 		"prisma-pull": "npx prisma db pull --schema=./node_modules/masterPrismaSchema/prisma/schema",
 		"prisma-push": "npx prisma db push --schema=./node_modules/masterPrismaSchema/prisma/schema",
 		"packageJsonStripper": "node tools/packageJsonStripper.js",
-		"build-docker": "docker build -t screwfix-trentham-plctodb ."
+		"build-docker": "docker build -t screwfix-trentham-plctodb .",
+		"lint": "eslint .",
+		"lint-fix": "eslint --fix ."
 	},
 	"author": "",
 	"license": "ISC",
@@ -35,12 +37,20 @@
 		"winston-daily-rotate-file": "^5.0.0"
 	},
 	"devDependencies": {
+		"@eslint/js": "^9.22.0",
 		"@types/mysql": "^2.15.26",
 		"@types/node-cron": "^3.0.11",
 		"@types/node-snap7": "^0.2.24",
 		"@types/winston": "^2.4.4",
+		"eslint": "^9.22.0",
+		"eslint-plugin-json": "^4.0.1",
+		"eslint-plugin-node": "^11.1.0",
+		"eslint-plugin-prettier": "^5.2.3",
+		"eslint-plugin-unused-imports": "^4.1.4",
+		"globals": "^16.0.0",
 		"masterPrismaSchema": "git+https://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:x-oauth-basic@github.com/jameswlyons/dematicDashboardScrewfixTrenthamMasterPrismaSchema.git",
 		"prettier": "^3.3.3",
-		"prisma": "^5.19.1"
+		"prisma": "^5.19.1",
+		"typescript-eslint": "^8.26.1"
 	}
 }

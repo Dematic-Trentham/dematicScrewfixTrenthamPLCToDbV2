@@ -6,7 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const logDir = path.join(__dirname, "logs");
+const logDir = path.join(__dirname, "/../logs");
 
 // Configure daily rotating file transport
 const transport = new DailyRotateFile({

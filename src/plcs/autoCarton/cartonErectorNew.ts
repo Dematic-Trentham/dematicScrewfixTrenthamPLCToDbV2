@@ -4,13 +4,8 @@
 //Last modified: 2024/03/16 11:57:28
 //Version: 1.0.0
 
-//import plc
-import { version } from "moment";
-import plc from "./../../misc/plc/plc.js";
-import snap7Types from "./../../misc/plc/types.js";
-
 //list of faults and there locations
-let faults = [
+const faults = [
 	{ fault: "Test Fault", location: "1.2", current: false },
 	{ fault: "D10 Empty Pallet Defect", location: "84.1", current: false },
 	{

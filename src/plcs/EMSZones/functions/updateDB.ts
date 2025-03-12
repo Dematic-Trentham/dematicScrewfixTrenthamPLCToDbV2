@@ -3,14 +3,12 @@
 //Date: 2023/02/03 03:38:36
 //Last modified: 2024/10/26 10:32:12
 //Version: 0.0.1
-import plc from "../../../misc/plc/plc.js";
-import plcToDB from "../../../misc/plcToDB.js";
-
-import snap7, { S7Client } from "node-snap7";
+import snap7 from "node-snap7";
 
 //import types
 import snap7Types from "../../../misc/plc/types.js";
 import db from "../../../db/db.js";
+import logger from "../../../misc/logging.js";
 
 export type TPlcConfig = {
 	ip: string;
@@ -42,7 +40,7 @@ export async function readAndInsertSingle(
 		plcConfig.slot,
 		async function (err: any) {
 			if (err) {
-				console.log(
+				logger.error(
 					"error for plc" + plcConfig.name + ": " + s7client.ErrorText(err)
 				);
 				return;
@@ -62,7 +60,7 @@ export async function readAndInsertMultiple(
 	//connect to plc
 	const s7client = new snap7.S7Client();
 
-	//console.log("Previous connection status: " + s7client.Connected());
+	//logger.error("Previous connection status: " + s7client.Connected());
 
 	s7client.SetParam(snap7Types.ParamNumber.SendTimeout, 5000);
 	s7client.SetParam(snap7Types.ParamNumber.RecvTimeout, 5000);
@@ -75,14 +73,14 @@ export async function readAndInsertMultiple(
 			plcConfig.slot,
 			async function (err: any) {
 				if (err) {
-					console.log(
+					logger.error(
 						"error for plc" + plcConfig.name + ": " + s7client.ErrorText(err)
 					);
 					reject(err);
 					return;
 				}
 
-				//console.log("Connected to plc: " + s7client.Connected());
+				//logger.error("Connected to plc: " + s7client.Connected());
 
 				try {
 					await Promise.all(
@@ -114,7 +112,7 @@ async function readAndInsertPlcData(
 		snap7Types.WordLen.S7WLByte,
 		async function (err: any, buffer: Buffer) {
 			if (err) {
-				console.log(
+				logger.error(
 					"error for plc" +
 						plcConfig.name +
 						": " +
@@ -123,7 +121,7 @@ async function readAndInsertPlcData(
 						plcArea.name
 				);
 
-				//console.log(s7client.Connected());
+				//logger.error(s7client.Connected());
 				return;
 			}
 
@@ -133,7 +131,7 @@ async function readAndInsertPlcData(
 			let bitValue = byte & (1 << plcArea.bit);
 			bitValue = bitValue >> plcArea.bit;
 
-			//console.log(
+			//logger.error(
 			//	"Data read from plc: " + bitValue + " for area: " + plcArea.name
 			//);
 
@@ -150,10 +148,10 @@ async function insertOrUpdateDataToDB(plcArea: TPlcArea, data: string) {
 		},
 	});
 
-	//console.log("Data exists: " + exists + " for area: " + plcArea.name);
+	//logger.error("Data exists: " + exists + " for area: " + plcArea.name);
 
 	if (exists) {
-		//console.log("Updating data for area: " + plcArea.name);
+		//logger.error("Updating data for area: " + plcArea.name);
 
 		await db.siteEMS.update({
 			where: {
@@ -165,7 +163,7 @@ async function insertOrUpdateDataToDB(plcArea: TPlcArea, data: string) {
 			},
 		});
 	} else {
-		//console.log("Inserting data for area: " + plcArea.name);
+		//logger.error("Inserting data for area: " + plcArea.name);
 
 		await db.siteEMS.create({
 			data: {
