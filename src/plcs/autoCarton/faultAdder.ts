@@ -1,4 +1,4 @@
-import { autoCartonMachineType } from "@prisma/client";
+type autoCartonMachineType = "erector" | "Lidder" | "iPack";
 import db from "../../db/db.js";
 
 import logger from "../../misc/logging.js";

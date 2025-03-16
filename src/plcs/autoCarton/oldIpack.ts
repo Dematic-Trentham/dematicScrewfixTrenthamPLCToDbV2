@@ -11,8 +11,7 @@ const faults = [
 
 //import newb+
 import newBPlus from "./newB+.js";
-import { autoCartonMachineType } from "@prisma/client";
-
+type autoCartonMachineType = "erector" | "Lidder" | "iPack";
 async function getAndInsertFaults(
 	ip: string,
 	machineType: autoCartonMachineType,

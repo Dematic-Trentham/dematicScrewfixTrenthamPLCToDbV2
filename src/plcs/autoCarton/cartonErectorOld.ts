@@ -70,7 +70,7 @@ let testFault: boolean = false;
 
 //import old B plus
 import oldBPlusDB from "./oldB+DB.js";
-import { autoCartonMachineType } from "@prisma/client";
+type autoCartonMachineType = "erector" | "Lidder" | "iPack";
 
 async function getAndInsertFaultsForOldErector(
 	ip: string,

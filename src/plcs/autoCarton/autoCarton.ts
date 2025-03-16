@@ -14,7 +14,7 @@ import oldCartonErector from "./cartonErectorOld.js";
 import db from "../../db/db.js";
 import ping from "ping";
 import { addFaultsToDB } from "./faultAdder.js";
-import { autoCartonMachineType } from "@prisma/client";
+type autoCartonMachineType = "erector" | "Lidder" | "iPack";
 import logger from "../../misc/logging.js";
 
 //function to be run from the main program every 10 seconds
@@ -73,6 +73,37 @@ async function getErectors() {
 			})
 		)
 	);
+
+	const tasks2 = [
+		{
+			name: "erector1Watchdog",
+			task: checkAndPingPLC("10.4.2.160", "erector", 1),
+		},
+		{
+			name: "erector2Watchdog",
+			task: checkAndPingPLC("10.4.2.161", "erector", 2),
+		},
+		{
+			name: "erector3Watchdog",
+			task: checkAndPingPLC("10.4.2.162", "erector", 3),
+		},
+		{
+			name: "erector4Watchdog",
+			task: checkAndPingPLC("10.4.2.163", "erector", 4),
+		},
+		{
+			name: "erector5Watchdog",
+			task: checkAndPingPLC("10.4.2.164", "erector", 5),
+		},
+	];
+
+	await Promise.all(
+		tasks2.map(({ name, task }) =>
+			task.catch((error) => {
+				logger.error(`Error in function ${name}:`, error);
+			})
+		)
+	);
 }
 
 async function getLidders() {
@@ -86,10 +117,10 @@ async function getLidders() {
 			name: "lidder2",
 			task: oldCC.getBPlusMachine("10.4.2.153", "Line2Lidder", "Lidder", 2),
 		},
-		//{
-		//	name: "lidder3",
-		//	task: newIpackv1.getAndInsertFaults("10.4.2.155", "Lidder", 3, "TIA"),
-		//	},
+		{
+			name: "lidder3",
+			task: newIpackv1.getAndInsertFaults("10.4.2.155", "Lidder", 3, "TIA"),
+		},
 		{
 			name: "lidder4",
 			task: oldCC.getBPlusMachine("10.4.2.157", "Line4Lidder", "Lidder", 4),
@@ -113,7 +144,10 @@ async function getLidders() {
 			name: "lidder2Watchdog",
 			task: checkAndPingPLC("10.4.2.153", "Lidder", 2),
 		},
-		//{ name: "lidder3Watchdog", task: checkAndPingPLC("10.4.2.155", "Lidder", 3) },
+		{
+			name: "lidder3Watchdog",
+			task: checkAndPingPLC("10.4.2.155", "Lidder", 3),
+		},
 		{
 			name: "lidder4Watchdog",
 			task: checkAndPingPLC("10.4.2.157", "Lidder", 4),

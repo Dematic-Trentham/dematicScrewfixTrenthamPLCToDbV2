@@ -14,7 +14,7 @@ import { addFaultsToDB } from "./faultAdder.js";
 import { iPackFaults } from "./faultDefinitions/iPackFaults.js";
 import { lidderFaults } from "./faultDefinitions/lidderFaults.js";
 import { lidderFaultsLine1 } from "./faultDefinitions/lidderFaultsLine1.js";
-import { autoCartonMachineType } from "@prisma/client";
+type autoCartonMachineType = "erector" | "Lidder" | "iPack";
 import logger from "../../misc/logging.js";
 
 //get Lidder Machine

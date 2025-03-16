@@ -513,7 +513,7 @@ const faults = [
 	},
 ];
 
-import { autoCartonMachineType } from "@prisma/client";
+type autoCartonMachineType = "erector" | "Lidder" | "iPack";
 //import newb+
 import newBPlus from "./newB+.js";
 

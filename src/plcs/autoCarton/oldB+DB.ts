@@ -1,5 +1,5 @@
 //import plc
-import { autoCartonMachineType } from "@prisma/client";
+type autoCartonMachineType = "erector" | "Lidder" | "iPack";
 import plc from "./../../misc/plc/plc.js";
 import snap7Types from "./../../misc/plc/types.js";
 import { addFaultsToDB } from "./faultAdder.js";
