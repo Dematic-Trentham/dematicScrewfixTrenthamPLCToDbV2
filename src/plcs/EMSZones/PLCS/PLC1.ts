@@ -10,7 +10,7 @@ import { readAndInsertMultiple } from "../functions/updateDB.js";
 const plcConfig = {
 	ip: "10.4.2.20",
 	rack: 0,
-	slot: 2,
+	slot: 3,
 	name: "PLC1",
 };
 

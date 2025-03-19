@@ -3,13 +3,14 @@
 //Date: 2023/02/03 03:38:36
 //Last modified: 2024/10/26 09:53:18
 //Version: 0.0.1
+
 import snap7Types from "../../../misc/plc/types.js";
-import { readAndInsertMultiple } from "../functions/updateDB.js";
+import { readAndInsertMultiple } from "./../functions/updateDB.js";
 
 const plcConfig = {
 	ip: "10.4.2.22",
 	rack: 0,
-	slot: 2,
+	slot: 3,
 	name: "PLC11",
 };
 

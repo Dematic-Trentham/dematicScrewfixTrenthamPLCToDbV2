@@ -20,19 +20,32 @@ import logger from "../../misc/logging.js";
 
 async function checkAllEMS() {
 	logger.info("Checking all EMS data");
+	const tasks = [
+		//{ name: "PLC1", task: PLC1.readEMSDataFromPLC1() },
+		//{ name: "PLC2", task: PLC2.readEMSDataFromPLC2() },
+		//{ name: "PLC11", task: PLC11.readEMSDataFromPLC11() },
+		//	{ name: "PLC12", task: PLC12.readEMSDataFromPLC12() },
+		//	{ name: "PLC13", task: PLC13.readEMSDataFromPLC13() },
+		//	{ name: "PLC21", task: PLC21.readEMSDataFromPLC21() },
+		//	{ name: "PLC22", task: PLC22.readEMSDataFromPLC22() },
+		//	{ name: "PLC23", task: PLC23.readEMSDataFromPLC23() },
+		//	{ name: "PLC24", task: PLC24.readEMSDataFromPLC24() },
+		//{ name: "PLC31", task: PLC31.readEMSDataFromPLC31() },
+		//	{ name: "PLC32", task: PLC32.readEMSDataFromPLC32() },
+		//	{ name: "PLC33", task: PLC33.readEMSDataFromPLC33() },
+		{ name: "test", task: console.log("test") },
+	];
 
-	await PLC1.readEMSDataFromPLC1();
-	await PLC2.readEMSDataFromPLC2();
-	await PLC11.readEMSDataFromPLC11();
-	await PLC12.readEMSDataFromPLC12();
-	await PLC13.readEMSDataFromPLC13();
-	await PLC21.readEMSDataFromPLC21();
-	await PLC22.readEMSDataFromPLC22();
-	await PLC23.readEMSDataFromPLC23();
-	await PLC24.readEMSDataFromPLC24();
-	await PLC31.readEMSDataFromPLC31();
-	await PLC32.readEMSDataFromPLC32();
-	await PLC33.readEMSDataFromPLC33();
+	await Promise.all(
+		tasks.map(async ({ name, task }) => {
+			try {
+				await task;
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+			} catch (error) {
+				logger.error(`Fault in ${name}`);
+			}
+		})
+	);
 }
 
 export default { checkAllEMS };

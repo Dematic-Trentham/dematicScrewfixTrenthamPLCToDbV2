@@ -41,12 +41,12 @@ export async function readAndInsertSingle(
 		async function (err: any) {
 			if (err) {
 				logger.error(
-					"error for plc" + plcConfig.name + ": " + s7client.ErrorText(err)
+					"error for plc1 " + plcConfig.name + ": " + s7client.ErrorText(err)
 				);
 				return;
 			}
 
-			readAndInsertPlcData(s7client, plcConfig, plcArea);
+			await readAndInsertPlcData(s7client, plcConfig, plcArea);
 			//disconnect from plc
 			await s7client.Disconnect();
 		}
@@ -66,7 +66,8 @@ export async function readAndInsertMultiple(
 	s7client.SetParam(snap7Types.ParamNumber.RecvTimeout, 5000);
 	s7client.SetParam(snap7Types.ParamNumber.PingTimeout, 5000);
 
-	return new Promise<void>((resolve, reject) => {
+	return new Promise<void>(() => {
+		const s7client = new snap7.S7Client();
 		s7client.ConnectTo(
 			plcConfig.ip,
 			plcConfig.rack,
@@ -74,26 +75,39 @@ export async function readAndInsertMultiple(
 			async function (err: any) {
 				if (err) {
 					logger.error(
-						"error for plc" + plcConfig.name + ": " + s7client.ErrorText(err)
+						"error for " + plcConfig.name + ": " + s7client.ErrorText(err)
 					);
-					reject(err);
 					return;
 				}
 
-				//logger.error("Connected to plc: " + s7client.Connected());
+				logger.error("Reading " + plcConfig.name + " EMS data - connected");
 
-				try {
-					await Promise.all(
-						plcAreas.map(async (plcArea) => {
-							await readAndInsertPlcData(s7client, plcConfig, plcArea);
-						})
-					);
-					resolve();
-				} catch (error) {
-					reject(error);
-				} finally {
+				await s7client.MBRead(1, 200, async function (err: any, res: any) {
+					if (err) {
+						logger.error(
+							"error for " + plcConfig.name + ": " + s7client.ErrorText(err)
+						);
+						return;
+					}
+
+					//for each item in the items array
+					for (let i = 0; i < plcAreas.length; i++) {
+						//get the current item
+						const item = plcAreas[i];
+
+						//get the value from the plc data
+						const byte = res[item.start - 1];
+
+						//get the bit from the plc data
+						const value = (byte >> item.bit) & 1;
+
+						//insert the value into the db
+						await insertOrUpdateDataToDB(item, value.toString());
+					}
+
+					//disconnect from plc
 					await s7client.Disconnect();
-				}
+				});
 			}
 		);
 	});
@@ -110,10 +124,18 @@ async function readAndInsertPlcData(
 		plcArea.start,
 		1,
 		snap7Types.WordLen.S7WLByte,
+
 		async function (err: any, buffer: Buffer) {
+			logger.error(
+				"Reading data from plc3: " +
+					plcConfig.name +
+					" for area: " +
+					plcArea.name
+			);
+
 			if (err) {
 				logger.error(
-					"error for plc" +
+					"error for plc3 " +
 						plcConfig.name +
 						": " +
 						s7client.ErrorText(err) +
@@ -131,9 +153,9 @@ async function readAndInsertPlcData(
 			let bitValue = byte & (1 << plcArea.bit);
 			bitValue = bitValue >> plcArea.bit;
 
-			//logger.error(
-			//	"Data read from plc: " + bitValue + " for area: " + plcArea.name
-			//);
+			logger.error(
+				"Data read from plc5 : " + bitValue + " for area: " + plcArea.name
+			);
 
 			//insert data to DB if it does not exist else update
 			await insertOrUpdateDataToDB(plcArea, bitValue.toString());
@@ -141,7 +163,7 @@ async function readAndInsertPlcData(
 	);
 }
 
-async function insertOrUpdateDataToDB(plcArea: TPlcArea, data: string) {
+export async function insertOrUpdateDataToDB(plcArea: TPlcArea, data: string) {
 	const exists = await db.siteEMS.findUnique({
 		where: {
 			name: plcArea.name,
