@@ -5,9 +5,9 @@
 const version = "1.0.0";
 
 // Handle unhandled promise rejections
-//process.on("unhandledRejection", (reason, promise) => {
-//	logger.error("Unhandled Rejection at:", promise, "reason:", reason);
-//});
+process.on("unhandledRejection", (reason, promise) => {
+	logger.error("Unhandled Rejection at:", promise, "reason:", reason);
+});
 
 //startup text
 logger.info("Dematic Dashboard Micro Service - PLC To DB");
@@ -27,7 +27,7 @@ import logger from "./misc/logging.js";
 
 //run every 5 seconds
 cron.schedule("*/5 * * * * *", async () => {
-	return;
+	//return;
 	try {
 		logger.info("Running 5s cron job");
 
@@ -76,7 +76,7 @@ cron.schedule("*/5 * * * * *", async () => {
 
 //run every 5 minutes
 cron.schedule("*/5 * * * *", async () => {
-	return;
+	//return;
 	try {
 		//logger.info("Running 5m cron job");
 		//start timer for this function
