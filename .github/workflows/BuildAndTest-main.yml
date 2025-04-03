@@ -6,6 +6,12 @@ on:
       - main
 
 jobs:
+  Hello_World:
+    runs-on: self-hosted
+
+    steps:
+      - name: Print Hello World
+        run: echo "Hello, World!"
   # Build_Test_and_Run:
   #   runs-on: self-hosted
 
@@ -24,7 +30,7 @@ jobs:
 
   Build_Image:
     runs-on: self-hosted
-    # needs: Build_Test_and_Run
+    needs: Hello_World
 
     steps:
       - name: Checkout repository
