@@ -54,11 +54,7 @@ async function getErectors() {
 		},
 		{
 			name: "erector4",
-			task: oldCartonErector.getAndInsertFaultsForOldErector(
-				"10.4.2.163",
-				"erector",
-				4
-			),
+			task: newCartonErector.getAndInsertFaults("10.4.2.163", "erector", 4),
 		},
 		{
 			name: "erector5",
