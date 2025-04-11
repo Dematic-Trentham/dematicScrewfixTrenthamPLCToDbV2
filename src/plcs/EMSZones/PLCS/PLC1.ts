@@ -17,14 +17,24 @@ const plcConfig = {
 export async function readEMSDataFromPLC1() {
 	const items = [
 		{
-			name: "PLC1_EEStopZone_Zone2",
+			name: "EMS1_Zone1->PLC1",
 			location: "PLC1",
 			subLocation: "PLC1",
-			description: "EStop Monitoring Zone 2",
+			description: "EStop Monitoring Zone 1",
 			area: snap7Types.Area.S7AreaMK,
 			db: 0,
 			start: 5,
 			bit: 0,
+		},
+		{
+			name: "PLC1_Zone2->EMS1_Zone2",
+			location: "PLC1",
+			subLocation: "PLC1",
+			description: "EStop Monitoring Zone 1",
+			area: snap7Types.Area.S7AreaMK,
+			db: 0,
+			start: 4,
+			bit: 4,
 		},
 	];
 

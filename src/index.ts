@@ -29,7 +29,7 @@ import logger from "./misc/logging.js";
 cron.schedule("*/5 * * * * *", async () => {
 	//return;
 	try {
-		logger.info("Running 5s cron job");
+		logger.info("Running 5s cron job ");
 
 		//start timer for this function
 		const start = Date.now();

@@ -17,7 +17,7 @@ const plcConfig = {
 export async function readEMSDataFromPLC11() {
 	const items = [
 		{
-			name: "PLC11_EEStopZone_Zone4",
+			name: "EMS3_Zone4->PLC11",
 			location: "PLC11",
 			subLocation: "PLC11",
 			description: "EStop Monitoring Zone 4",
