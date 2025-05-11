@@ -83,7 +83,7 @@ async function GetAisle(
 				},
 				create: {
 					macAddress: dataMac.mac,
-					shuttleID: "",
+					shuttleID: "Unknown " + dataMac.mac,
 					currentLocation: `MSAI${paddy(dataMac.aisle, 2)}LV${paddy(dataMac.level, 2)}SH01`,
 					locationLastUpdated: timeStamp,
 				},
