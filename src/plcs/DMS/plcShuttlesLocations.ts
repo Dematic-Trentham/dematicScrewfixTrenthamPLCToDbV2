@@ -55,78 +55,102 @@ async function GetAisle(
 	aisleBaseLocationDB: number
 ) {
 	for (let level = 1; level < amountOfLevels + 1; level++) {
-		try {
-			const dataMac = await getShuttleData(
-				aisle,
-				level,
-				aisleBaseIP,
-				aisleIPOffset,
-				aisleBaseLocationDB
+		await getLevel(
+			level,
+			aisle,
+			aisleBaseIP,
+			aisleIPOffset,
+			aisleBaseLocationDB
+		);
+	}
+}
+
+async function getLevel(
+	level: number,
+	aisle: number,
+	aisleBaseIP: string,
+	aisleIPOffset: number,
+	aisleBaseLocationDB: number
+) {
+	try {
+		const dataMac = await getShuttleData(
+			aisle,
+			level,
+			aisleBaseIP,
+			aisleIPOffset,
+			aisleBaseLocationDB
+		);
+
+		if (dataMac)
+			logger.info(
+				"Aisle: " +
+					dataMac.aisle +
+					" Level: " +
+					dataMac.level +
+					" Mac: " +
+					dataMac.mac
 			);
 
-			// logger.error("Aisle: " + dataMac.aisle + " Level: " + dataMac.level + " Mac: " + dataMac.mac);
+		const timeStamp = new Date().toISOString();
 
-			const timeStamp = new Date().toISOString();
+		//before we update the database, check if that location is in use
+		//update the shuttle locations table NEW
+		const oldShuttleInLocation = await db.dmsShuttleLocations.findFirst({
+			where: {
+				currentLocation: `MSAI${paddy(dataMac.aisle, 2)}LV${paddy(dataMac.level, 2)}SH01`,
+			},
+		});
 
-			//before we update the database, check if that location is in use
-			//update the shuttle locations table NEW
-			const oldShuttleInLocation = await db.dmsShuttleLocations.findFirst({
+		//update the mac address with the new location, we may need to create a new record if the macAddress is not in the table
+		const newShuttleInLocation = await db.dmsShuttleLocations.upsert({
+			where: {
+				macAddress: dataMac.mac,
+			},
+			create: {
+				macAddress: dataMac.mac,
+				shuttleID: "Unknown " + dataMac.mac,
+				currentLocation: `MSAI${paddy(dataMac.aisle, 2)}LV${paddy(dataMac.level, 2)}SH01`,
+				locationLastUpdated: timeStamp,
+			},
+			update: {
+				currentLocation: `MSAI${paddy(dataMac.aisle, 2)}LV${paddy(dataMac.level, 2)}SH01`,
+				locationLastUpdated: timeStamp,
+			},
+		});
+
+		//if the old shuttle and the new shuttle are different,
+		if (
+			oldShuttleInLocation &&
+			oldShuttleInLocation.macAddress !== newShuttleInLocation.macAddress
+		) {
+			//we need to update the old shuttle location
+			await db.dmsShuttleLocations.update({
 				where: {
-					currentLocation: `MSAI${paddy(dataMac.aisle, 2)}LV${paddy(dataMac.level, 2)}SH01`,
+					macAddress: oldShuttleInLocation.macAddress,
+				},
+				data: {
+					currentLocation: "",
+					locationLastUpdated: timeStamp,
 				},
 			});
 
-			//update the mac address with the new location, we may need to create a new record if the macAddress is not in the table
-			const newShuttleInLocation = await db.dmsShuttleLocations.upsert({
-				where: {
-					macAddress: dataMac.mac,
-				},
-				create: {
-					macAddress: dataMac.mac,
-					shuttleID: "Unknown " + dataMac.mac,
-					currentLocation: `MSAI${paddy(dataMac.aisle, 2)}LV${paddy(dataMac.level, 2)}SH01`,
-					locationLastUpdated: timeStamp,
-				},
-				update: {
-					currentLocation: `MSAI${paddy(dataMac.aisle, 2)}LV${paddy(dataMac.level, 2)}SH01`,
-					locationLastUpdated: timeStamp,
+			//create log entry for swaps
+			await db.dmsShuttleSwapLogs.create({
+				data: {
+					timestamp: timeStamp,
+					aisle: aisle,
+					level: level,
+					oldMacAddress: oldShuttleInLocation.macAddress,
+					newMacAddress: newShuttleInLocation.macAddress,
+					oldShuttleID: oldShuttleInLocation.shuttleID,
+					newShuttleID: newShuttleInLocation.shuttleID,
 				},
 			});
-
-			//if the old shuttle and the new shuttle are different,
-			if (
-				oldShuttleInLocation &&
-				oldShuttleInLocation.macAddress !== newShuttleInLocation.macAddress
-			) {
-				//we need to update the old shuttle location
-				await db.dmsShuttleLocations.update({
-					where: {
-						macAddress: oldShuttleInLocation.macAddress,
-					},
-					data: {
-						currentLocation: "",
-						locationLastUpdated: timeStamp,
-					},
-				});
-
-				//create log entry for swaps
-				await db.dmsShuttleSwapLogs.create({
-					data: {
-						timestamp: timeStamp,
-						aisle: aisle,
-						level: level,
-						oldMacAddress: oldShuttleInLocation.macAddress,
-						newMacAddress: newShuttleInLocation.macAddress,
-						oldShuttleID: oldShuttleInLocation.shuttleID,
-						newShuttleID: newShuttleInLocation.shuttleID,
-					},
-				});
-			}
-		} catch (err) {
-			logger.error("Error reading shuttle data");
-			logger.error("Aisle: " + aisle + " Level: " + level);
-			logger.error(err);
 		}
+	} catch (err) {
+		logger.error("Error reading shuttle data");
+		logger.error("Aisle: " + aisle + " Level: " + level);
+		logger.error(err);
 	}
 }
 
