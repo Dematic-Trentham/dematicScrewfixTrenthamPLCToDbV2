@@ -33,7 +33,7 @@ async function checkAllEMS() {
 		//{ name: "PLC31", task: PLC31.readEMSDataFromPLC31() },
 		//	{ name: "PLC32", task: PLC32.readEMSDataFromPLC32() },
 		//	{ name: "PLC33", task: PLC33.readEMSDataFromPLC33() },
-		{ name: "test", task: console.log("test") },
+		//{ name: "test", task: console.log("test") },
 	];
 
 	await Promise.all(

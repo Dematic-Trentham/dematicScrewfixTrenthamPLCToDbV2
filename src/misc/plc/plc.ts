@@ -36,8 +36,8 @@ async function readFromS7DbRAW(
 			s7client.ConnectTo(ipAddress, rack, slot, function (err) {
 				//if error fall to catch block in function
 				if (err) {
-					logger.error("error: " + s7client.ErrorText(err));
-					reject(s7client.ErrorText(err));
+					//logger.error("error: " + s7client.ErrorText(err));
+					reject("error in plc.ts: 1" + s7client.ErrorText(err));
 					return;
 				}
 
@@ -52,14 +52,14 @@ async function readFromS7DbRAW(
 						s7client.Disconnect();
 						resolve(buffer);
 					} catch (error) {
-						logger.error(error);
+						//logger.error(error);
 						reject(error);
 						return;
 					}
 				});
 			});
 		} catch (error) {
-			logger.error(error);
+			//logger.error(error);
 			reject(error);
 			return;
 		}
@@ -82,8 +82,8 @@ async function readFromS7DBToInt(
 			s7client.ConnectTo(ipAddress, rack, slot, function (err) {
 				//if error fall to catch block in function
 				if (err) {
-					logger.error("error in plc.ts: " + s7client.ErrorText(err));
-					reject(s7client.ErrorText(err));
+					//	logger.error("error in plc.ts: " + s7client.ErrorText(err));
+					reject("error in plc.ts: 2" + s7client.ErrorText(err));
 					return;
 				}
 
@@ -131,13 +131,14 @@ async function readFromS7DBToInt(
 									// Return the buffer
 									resolve(int);
 								} catch (error) {
-									logger.error(
+									reject(
 										"error in plc.ts 1 " +
 											ipAddress +
 											": " +
+											error +
+											": " +
 											s7client.ErrorText(err)
 									);
-									reject(error);
 									return;
 								}
 							}
@@ -154,13 +155,7 @@ async function readFromS7DBToInt(
 							snap7Types.WordLen.S7WLWord,
 							function (err, buffer) {
 								if (err) {
-									logger.error(
-										"error in plc.ts 2 " +
-											ipAddress +
-											": " +
-											s7client.ErrorText(err)
-									);
-									reject(s7client.ErrorText(err));
+									reject("error in plc.ts: 2" + s7client.ErrorText(err));
 									return;
 								}
 
@@ -173,13 +168,14 @@ async function readFromS7DBToInt(
 									// Return the buffer
 									resolve(int);
 								} catch (error) {
-									logger.error(
+									reject(
 										"error in plc.ts 3 " +
 											ipAddress +
 											": " +
+											error +
+											": " +
 											s7client.ErrorText(err)
 									);
-									reject(error);
 									return;
 								}
 							}
@@ -196,13 +192,12 @@ async function readFromS7DBToInt(
 							snap7Types.WordLen.S7WLDWord,
 							function (err, buffer) {
 								if (err) {
-									logger.error(
+									reject(
 										"error in plc.ts 4 " +
 											ipAddress +
 											": " +
 											s7client.ErrorText(err)
 									);
-									reject(s7client.ErrorText(err));
 									return;
 								}
 
@@ -215,13 +210,14 @@ async function readFromS7DBToInt(
 									// Return the buffer
 									resolve(int);
 								} catch (error) {
-									logger.error(
+									reject(
 										"error in plc.ts 5 " +
 											ipAddress +
+											":" +
+											error +
 											": " +
 											s7client.ErrorText(err)
 									);
-									reject(error);
 									return;
 								}
 							}
@@ -230,8 +226,7 @@ async function readFromS7DBToInt(
 				}
 			});
 		} catch (error) {
-			logger.error("error in plc.ts 6 " + ipAddress + ": ");
-			reject(error);
+			reject("error in plc.ts 6 " + ipAddress + ": " + error);
 			return;
 		}
 	});
@@ -251,10 +246,10 @@ async function readFromMakerByte(
 			s7client.ConnectTo(ipAddress, rack, slot, function (err) {
 				//if error fall to catch block in function
 				if (err) {
-					logger.error(
+					reject(
 						"error in plc.ts 7 " + ipAddress + ": " + s7client.ErrorText(err)
 					);
-					reject(s7client.ErrorText(err));
+
 					return;
 				}
 
@@ -267,13 +262,12 @@ async function readFromMakerByte(
 					snap7Types.WordLen.S7WLByte,
 					function (err, buffer) {
 						if (err) {
-							logger.error(
+							reject(
 								"error in plc.ts 8 " +
 									ipAddress +
 									": " +
 									s7client.ErrorText(err)
 							);
-							reject(s7client.ErrorText(err));
 
 							return;
 						}
@@ -284,21 +278,23 @@ async function readFromMakerByte(
 
 							resolve(buffer.readUInt8(0));
 						} catch (error) {
-							logger.error(
+							reject(
 								"error in plc.ts 9 " +
 									ipAddress +
+									":" +
+									error +
 									": " +
 									s7client.ErrorText(err)
 							);
-							reject(error);
+
 							return;
 						}
 					}
 				);
 			});
 		} catch (error) {
-			logger.error("error in plc.ts 10 " + ipAddress);
-			reject(error);
+			reject("error in plc.ts 10 " + ipAddress + ": " + error);
+
 			return;
 		}
 	});
@@ -324,8 +320,8 @@ async function readFromMarkerBit(
 
 			resolve(bitValue);
 		} catch (error) {
-			logger.error("error in plc.ts 11 " + ipAddress);
-			reject(error);
+			reject("error in plc.ts 11 " + ipAddress + ": " + error);
+
 			return;
 		}
 	});
@@ -354,8 +350,8 @@ async function readFromMarkerBitNotSplit(
 
 			resolve(bitValue);
 		} catch (error) {
-			logger.error("error in plc.ts 12 " + ipAddress);
-			reject(error);
+			reject("error in plc.ts 12 " + ipAddress + ": " + error);
+
 			return;
 		}
 	});
@@ -377,8 +373,8 @@ async function readFromS7DBToBit(
 			s7client.ConnectTo(ipAddress, rack, slot, function (err) {
 				//if error fall to catch block in function
 				if (err) {
-					logger.error("error in plc.ts 13 " + ipAddress + ": ");
-					reject(s7client.ErrorText(err));
+					reject("error in plc.ts 13 " + ipAddress + ": ");
+
 					return;
 				}
 
@@ -391,8 +387,12 @@ async function readFromS7DBToBit(
 					snap7Types.WordLen.S7WLByte,
 					function (err, buffer) {
 						if (err) {
-							logger.error("error in plc.ts 14 " + ipAddress + ": ");
-							reject(s7client.ErrorText(err));
+							reject(
+								"error in plc.ts 14 " +
+									ipAddress +
+									": " +
+									s7client.ErrorText(err)
+							);
 
 							return;
 						}
@@ -406,16 +406,16 @@ async function readFromS7DBToBit(
 
 							resolve(bitValue);
 						} catch (error) {
-							logger.error("error in plc.ts 15 " + ipAddress + ": ");
-							reject(error);
+							reject("error in plc.ts 15 " + ipAddress + ": " + error);
+
 							return;
 						}
 					}
 				);
 			});
 		} catch (error) {
-			logger.error("error in plc.ts 16 " + ipAddress + ": ");
-			reject(error);
+			reject("error in plc.ts 16 " + ipAddress + ": " + error);
+
 			return;
 		}
 	});
@@ -437,10 +437,10 @@ async function readFromS7DBToInt2(
 			s7client.ConnectTo(ipAddress, rack, slot, function (err) {
 				//if error fall to catch block in function
 				if (err) {
-					logger.error(
+					reject(
 						"error in plc.ts 17 " + ipAddress + ": " + s7client.ErrorText(err)
 					);
-					reject(s7client.ErrorText(err));
+
 					return;
 				}
 
@@ -468,13 +468,15 @@ async function readFromS7DBToInt2(
 									// Return the buffer
 									resolve(int);
 								} catch (error) {
-									logger.error(
+									reject(
 										"error in plc.ts 18 " +
 											ipAddress +
 											": " +
+											error +
+											": " +
 											s7client.ErrorText(err)
 									);
-									reject(error);
+
 									return;
 								}
 							}
@@ -491,7 +493,12 @@ async function readFromS7DBToInt2(
 							snap7Types.WordLen.S7WLWord,
 							function (err, buffer) {
 								if (err) {
-									reject(s7client.ErrorText(err));
+									reject(
+										"error in plc.ts 19a " +
+											ipAddress +
+											": " +
+											s7client.ErrorText(err)
+									);
 									return;
 								}
 
@@ -504,13 +511,15 @@ async function readFromS7DBToInt2(
 									// Return the buffer
 									resolve(int);
 								} catch (error) {
-									logger.error(
+									reject(
 										"error in plc.ts 19 " +
 											ipAddress +
 											": " +
+											error +
+											": " +
 											s7client.ErrorText(err)
 									);
-									reject(error);
+
 									return;
 								}
 							}
@@ -527,14 +536,12 @@ async function readFromS7DBToInt2(
 							snap7Types.WordLen.S7WLDWord,
 							function (err, buffer) {
 								if (err) {
-									logger.error(
+									reject(
 										"error in plc.ts 20 " +
 											ipAddress +
 											": " +
-											s7client.ErrorText(err)
-									);
-									logger.error(
-										"trying to read from: " +
+											s7client.ErrorText(err) +
+											"trying to read from: " +
 											ipAddress +
 											" db: " +
 											dbNumber +
@@ -543,7 +550,7 @@ async function readFromS7DBToInt2(
 											" length: " +
 											length
 									);
-									reject(s7client.ErrorText(err));
+
 									return;
 								}
 
@@ -556,13 +563,15 @@ async function readFromS7DBToInt2(
 									// Return the buffer
 									resolve(int);
 								} catch (error) {
-									logger.error(
+									reject(
 										"error in plc.ts 21 " +
 											ipAddress +
 											": " +
+											error +
+											": " +
 											s7client.ErrorText(err)
 									);
-									reject(error);
+
 									return;
 								}
 							}
@@ -579,13 +588,13 @@ async function readFromS7DBToInt2(
 							snap7Types.WordLen.S7WLWord,
 							function (err, buffer) {
 								if (err) {
-									logger.error(
+									reject(
 										"error in plc.ts 22 " +
 											ipAddress +
 											": " +
 											s7client.ErrorText(err)
 									);
-									reject(s7client.ErrorText(err));
+
 									return;
 								}
 
@@ -612,18 +621,19 @@ async function readFromS7DBToInt2(
 									}
 
 									logger.error(main);
-
+									logger.error("hummmmmm");
 									// Return the buffer
 									resolve(main);
 								} catch (error) {
-									logger.error(
+									reject(
 										"error in plc.ts 23 " +
 											ipAddress +
+											": " +
+											error +
 											": " +
 											s7client.ErrorText(err)
 									);
 
-									reject(error);
 									return;
 								}
 							}
@@ -632,8 +642,8 @@ async function readFromS7DBToInt2(
 				}
 			});
 		} catch (error) {
-			logger.error("error in plc.ts 24 " + ipAddress);
-			reject(error);
+			reject("error in plc.ts 24 " + ipAddress + ": " + error);
+
 			return;
 		}
 	});
@@ -664,10 +674,10 @@ async function readFromS7Markers(
 			s7client.ConnectTo(ipAddress, rack, slot, function (err) {
 				//if error fall to catch block in function
 				if (err) {
-					logger.error(
+					reject(
 						"error in plc.ts 25 " + ipAddress + ": " + s7client.ErrorText(err)
 					);
-					reject(s7client.ErrorText(err));
+
 					return;
 				}
 
@@ -680,13 +690,12 @@ async function readFromS7Markers(
 					snap7Types.WordLen.S7WLByte,
 					function (err, buffer) {
 						if (err) {
-							logger.error(
+							reject(
 								"error in plc.ts 26 " +
 									ipAddress +
 									": " +
 									s7client.ErrorText(err)
 							);
-							reject(s7client.ErrorText(err));
 
 							return;
 						}
@@ -698,16 +707,16 @@ async function readFromS7Markers(
 							// Return the buffer
 							resolve(buffer);
 						} catch (error) {
-							logger.error(error);
 							reject(error);
+
 							return;
 						}
 					}
 				);
 			});
 		} catch (error) {
-			logger.error("error in plc.ts 27 " + ipAddress);
-			reject(error);
+			reject("error in plc.ts 27 " + ipAddress + ": " + error);
+
 			return;
 		}
 	});
@@ -723,8 +732,8 @@ function bufferToBit(buffer: Buffer, byteNumber: number, bit: number) {
 
 			resolve(bitValue == 1);
 		} catch (error) {
-			logger.error("error in plc.ts 28");
-			reject(error);
+			reject("error in plc.ts 28" + error);
+
 			return;
 		}
 	});
@@ -744,8 +753,8 @@ function bufferToBit2(buffer: Buffer, byteNumberAndBit: string) {
 
 			resolve(bitValue == 1);
 		} catch (error) {
-			logger.error("error in plc.ts 29");
-			reject(error);
+			reject("error in plc.ts 29" + error);
+
 			return;
 		}
 	});
@@ -767,10 +776,9 @@ async function readFromS7DBToBuffer(
 			s7client.ConnectTo(ipAddress, rack, slot, function (err) {
 				//if error fall to catch block in function
 				if (err) {
-					logger.error(
+					reject(
 						"error in plc.ts 30 " + ipAddress + ": " + s7client.ErrorText(err)
 					);
-					reject(s7client.ErrorText(err));
 					return;
 				}
 
@@ -783,13 +791,12 @@ async function readFromS7DBToBuffer(
 					snap7Types.WordLen.S7WLByte,
 					function (err, buffer) {
 						if (err) {
-							logger.error(
+							reject(
 								"error in plc.ts 31 " +
 									ipAddress +
 									": " +
 									s7client.ErrorText(err)
 							);
-							reject(s7client.ErrorText(err));
 
 							return;
 						}
@@ -801,21 +808,22 @@ async function readFromS7DBToBuffer(
 							// Return the buffer
 							resolve(buffer);
 						} catch (error) {
-							logger.error(
+							reject(
 								"error in plc.ts 32 " +
 									ipAddress +
 									": " +
+									error +
+									": " +
 									s7client.ErrorText(err)
 							);
-							reject(error);
+
 							return;
 						}
 					}
 				);
 			});
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		} catch (error) {
-			logger.error("error in plc.ts 33 " + ipAddress);
+			reject("error in plc.ts 33 " + ipAddress + ": " + error);
 			return;
 		}
 	});

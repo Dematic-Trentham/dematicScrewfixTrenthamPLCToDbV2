@@ -1,14 +1,12 @@
 type autoCartonMachineType = "erector" | "Lidder" | "iPack";
 import db from "../../db/db.js";
 
-import logger from "../../misc/logging.js";
-
 export async function addFaultsToDB(
 	machineType: autoCartonMachineType,
 	fault: string,
 	line: number
 ) {
-	logger.info(`Adding fault to DB: ${machineType} ${fault} LINE ${line}`);
+	//logger.info(`Adding fault to DB: ${machineType} ${fault} LINE ${line}`);
 
 	//is there already a faultcode in the database for this fault
 	const faultCodes = await db.autoCartonFaultCodeLookup.findFirst({

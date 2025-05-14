@@ -60,7 +60,7 @@ async function plcToDB(
 					}
 				})
 				.catch((err) => {
-					logger.error(err);
+					logger.error("plcToDB 1 " + err);
 				});
 
 			break;
@@ -104,13 +104,13 @@ async function plcToDB(
 					}
 				})
 				.catch((err) => {
-					logger.error(err);
+					logger.error("plcToDB 2 " + err);
 				});
 
 			break;
 
 		default:
-			logger.error("Invalid area");
+			logger.error("plcToDB 3 " + "bad area");
 			break;
 	}
 }

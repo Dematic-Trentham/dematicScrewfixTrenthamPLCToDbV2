@@ -15,7 +15,7 @@ import { iPackFaults } from "./faultDefinitions/iPackFaults.js";
 import { lidderFaults } from "./faultDefinitions/lidderFaults.js";
 import { lidderFaultsLine1 } from "./faultDefinitions/lidderFaultsLine1.js";
 type autoCartonMachineType = "erector" | "Lidder" | "iPack";
-import logger from "../../misc/logging.js";
+//import logger from "../../misc/logging.js";
 
 //get Lidder Machine
 async function getBPlusMachine(
@@ -96,9 +96,10 @@ async function getBPlusMachine(
 
 			resolve(true);
 		} catch (err) {
-			logger.error("error in machine.js 1 - " + request.machine);
+			//logger.error("error in machine.js 1 - " + request.machine);
 			reject({ machine: request.machine, err });
-			logger.error(err);
+			//logger.error(err);
+			return;
 		}
 	});
 	return promise;
@@ -119,7 +120,7 @@ function getBPlusMachineFaults(request: {
 		}
 
 		if (ip == undefined) {
-			logger.error("error in machine.js 2 - " + request.machine);
+			//logger.error("error in machine.js 2 - " + request.machine);
 			reject({ machine: request.machine, err: "Wrong Variables" });
 			return;
 		}
@@ -129,8 +130,6 @@ function getBPlusMachineFaults(request: {
 
 			resolve(returnedFaults);
 		} catch (err) {
-			logger.error("error in machine.js 3 - " + request.machine + " - " + err);
-
 			reject({ machine: request.machine, err });
 		}
 	});
@@ -153,12 +152,12 @@ async function ConnectToPlcToGetBPlusMachineFaults(request: {
 
 		s7client.ConnectTo(ip, 0, 2, async function (err: any) {
 			if (err) {
-				logger.error(
-					"error in machine.js 4 - " +
-						request.machine +
-						" - " +
-						s7client.ErrorText(err)
-				);
+				//	logger.error(
+				//		"error in machine.js 4 - " +
+				//			request.machine +
+				//			" - " +
+				//			s7client.ErrorText(err)
+				//	);
 				reject({ machine: request.machine, err: s7client.ErrorText(err) });
 				return;
 			}
@@ -193,12 +192,12 @@ function ReadFaultsFromBPlusMachine(
 	const promise = new Promise(function (resolve, reject) {
 		s7client.DBRead(301, 16, size, function (err, res) {
 			if (err) {
-				logger.error(
-					"error in machine.js 5 - " +
-						request.machine +
-						" - " +
-						s7client.ErrorText(err)
-				);
+				//logger.error(
+				//	"error in machine.js 5 - " +
+				//		request.machine +
+				//		" - " +
+				//		s7client.ErrorText(err)
+				//);
 				// console.log("error reading from plc " + request.machine + " - " + s7client.ErrorText(err));
 				reject({ machine: request.machine, err: s7client.ErrorText(err) });
 				return;
