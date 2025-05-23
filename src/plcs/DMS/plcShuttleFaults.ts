@@ -121,7 +121,7 @@ async function checkAisleDBForFaults(
 						result[offset + 18 + 1]
 					).toString();
 
-					//logger.error("Fault code:@@ " + faultCode);
+					logger.error("Fault code:@@ " + faultCode);
 
 					//what location is this fault on?
 					let location = s72BytesToNumber(
@@ -132,7 +132,7 @@ async function checkAisleDBForFaults(
 					//add the aisle to the location
 					location = aisle + "-" + location;
 
-					//logger.error("Location: " + location);
+					logger.error("Location: " + location);
 
 					//check if we are already in fault
 					if (currentlyInFaultArray[location] == undefined) {
@@ -147,14 +147,14 @@ async function checkAisleDBForFaults(
 
 					//is this shuttle already in fault?
 					if (currentlyInFaultArray[location].fault == faultCode) {
-						//logger.error("Shuttle is already in same fault");
+						logger.error("Shuttle is already in same fault");
 					} else {
 						//were we in a different fault before?
 						if (currentlyInFaultArray[location].fault != "false") {
-							// logger.error("Shuttle was in fault before, now different fault");
+							logger.error("Shuttle was in fault before, now different fault");
 							await addFaultIntoDB(aisle, location, faultCode, ip);
 						} else {
-							//  logger.error("Shuttle was not in fault before, now in fault");
+							logger.error("Shuttle was not in fault before, now in fault");
 
 							//build sql query to insert the fault into the database
 
@@ -167,7 +167,7 @@ async function checkAisleDBForFaults(
 
 					currentlyInFaultArray[location].stillActive = true;
 
-					//logger.error(currentlyInFault[location]);
+					logger.error(currentlyInFaultArray[location]);
 				}
 
 				resolve(result);
