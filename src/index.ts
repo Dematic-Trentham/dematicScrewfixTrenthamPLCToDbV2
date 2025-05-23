@@ -35,7 +35,7 @@ cron.schedule("*/5 * * * * *", async () => {
 		try {
 			logger.info("Running 5s cron job ");
 
-			const tasks = createTimedTasks([
+			const tasks = [
 				{
 					name: "readDataFromPLC31TenSeconds",
 					task: async () => await plc31.readDataFromPLC31TenSeconds(),
@@ -48,11 +48,11 @@ cron.schedule("*/5 * * * * *", async () => {
 					name: "readShuttlesFaults",
 					task: async () => await plcShuttles.readShuttlesFaults(),
 				},
-			]);
+			];
 
 			await Promise.all(
 				tasks.map(({ name, task }) =>
-					task.catch((error) => {
+					task().catch((error) => {
 						logger.error(`Error in  function ${name}:`, error);
 					})
 				)
