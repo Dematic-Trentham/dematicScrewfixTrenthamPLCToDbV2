@@ -27,13 +27,17 @@ import logger from "./misc/logging.js";
 
 import { runTask, createTimedTasks } from "./debuging.js";
 
+cron.schedule("*/15 * * * * *", async () => {
+	await plcShuttles.readShuttlesFaults();
+});
+
 //run every 5 seconds
 cron.schedule("*/5 * * * * *", async () => {
 	//return;
 
 	runTask("Cron 5s", 5 * 1000, async () => {
 		try {
-			logger.info("Running 5s cron job ");
+			logger.info("Running 5s cron job...");
 
 			const tasks = [
 				{
@@ -44,10 +48,10 @@ cron.schedule("*/5 * * * * *", async () => {
 				////	name: "getAndInsertFaultsForAutoCarton",
 				//	task: async () => await autoCarton.getAndInsertFaultsForAutoCarton(),
 				//},
-				{
-					name: "readShuttlesFaults",
-					task: async () => await plcShuttles.readShuttlesFaults(),
-				},
+				//{
+				//	name: "readShuttlesFaults",
+				//	task: async () => await plcShuttles.readShuttlesFaults(),
+				//},
 			];
 
 			await Promise.all(
