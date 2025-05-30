@@ -261,7 +261,14 @@ async function checkAndPingPLC(
 		//	logger.error(`No data for 60 seconds for ${machineType} ${line}`);
 
 		// No data for 60 seconds, let's ping the PLC
-		const res = await ping.promise.probe(ip);
+		const pingPromise = ping.promise.probe(ip, {
+			timeout: 5, // 5 second timeout (may not work as expected on Windows)
+			min_reply: 1,
+		});
+		const timeoutPromise = new Promise((resolve) =>
+			setTimeout(() => resolve({ alive: false }), 5000)
+		);
+		const res: any = await Promise.race([pingPromise, timeoutPromise]);
 		if (res.alive) {
 			//logger.error(`PLC ${ip} is reachable`);
 			// Update the watchdog timer and add a watchdog to the db

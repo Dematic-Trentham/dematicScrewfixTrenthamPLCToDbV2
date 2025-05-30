@@ -40,10 +40,10 @@ cron.schedule("*/5 * * * * *", async () => {
 					name: "readDataFromPLC31TenSeconds",
 					task: async () => await plc31.readDataFromPLC31TenSeconds(),
 				},
-				{
-					name: "getAndInsertFaultsForAutoCarton",
-					task: async () => await autoCarton.getAndInsertFaultsForAutoCarton(),
-				},
+				//{
+				////	name: "getAndInsertFaultsForAutoCarton",
+				//	task: async () => await autoCarton.getAndInsertFaultsForAutoCarton(),
+				//},
 				{
 					name: "readShuttlesFaults",
 					task: async () => await plcShuttles.readShuttlesFaults(),

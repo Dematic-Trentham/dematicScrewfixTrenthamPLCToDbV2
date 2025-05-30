@@ -25,13 +25,13 @@ let functionCurrentlyRunning = false;
 
 async function readShuttlesFaults() {
 	if (functionCurrentlyRunning) {
-		logger.error("Function already running");
+		logger.error("Function already running shuttles faults");
 		return;
 	}
 
 	functionCurrentlyRunning = true;
 
-	//logger.error("Reading Shuttles Faults");
+	logger.error("Reading Shuttles Faults :(");
 
 	await checkDbForFaults();
 
@@ -51,13 +51,19 @@ async function checkDbForFaults() {
 	const aisleIPoffset = parseInt(aisleIPOffsetResult);
 	const dmsAisleFaultDB = parseInt(dmsAisleFaultDBResult);
 
+	logger.error("Amount of aisles: " + amountOfAisles);
+	logger.error("Amount of levels: " + amountOfLevels);
+	logger.error("Aisle base IP: " + aisleBaseIPResult);
+	logger.error("Aisle IP offset: " + aisleIPoffset);
+	logger.error("DMS Aisle Fault DB: " + dmsAisleFaultDB);
+
 	//set all faults to not active
 	for (const location in currentlyInFaultArray) {
 		currentlyInFaultArray[location].stillActive = false;
 	}
 
 	for (let aisle = 1; aisle < amountOfAisles + 1; aisle++) {
-		//logger.error(aisle);
+		logger.error(aisle);
 		//Loop through the 3 aisles
 		await checkAisleDBForFaults(
 			aisle,
@@ -104,7 +110,7 @@ async function checkAisleDBForFaults(
 				//get the amount of faults
 				const amountOfFaults = s72BytesToNumber(result[0], result[1]);
 
-				// logger.error("Amount of faults: " + amountOfFaults);
+				logger.error("Amount of faults: " + amountOfFaults);
 
 				//if we dont have any faults, return
 				if (amountOfFaults == 0) {
