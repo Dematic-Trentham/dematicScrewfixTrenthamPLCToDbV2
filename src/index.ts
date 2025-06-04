@@ -27,8 +27,22 @@ import logger from "./misc/logging.js";
 
 import { runTask, createTimedTasks } from "./debuging.js";
 
-cron.schedule("*/15 * * * * *", async () => {
-	await plcShuttles.readShuttlesFaults();
+cron.schedule("*/5 * * * * *", async () => {
+	runTask("Cron 5s", 5 * 1000, async () => {
+		try {
+			await plcShuttles.readShuttlesFaults();
+		} catch (error) {
+			logger.error("Error in 5s cron job:", error);
+		}
+	});
+});
+
+//ever day at 02:00 restart the service
+cron.schedule("0 2 * * *", async () => {
+	logger.info("Restarting PLC To DB Service...");
+
+	//restart the service
+	process.exit(0);
 });
 
 //run every 5 seconds
@@ -44,10 +58,10 @@ cron.schedule("*/5 * * * * *", async () => {
 					name: "readDataFromPLC31TenSeconds",
 					task: async () => await plc31.readDataFromPLC31TenSeconds(),
 				},
-				//{
-				////	name: "getAndInsertFaultsForAutoCarton",
-				//	task: async () => await autoCarton.getAndInsertFaultsForAutoCarton(),
-				//},
+				{
+					name: "getAndInsertFaultsForAutoCarton",
+					task: async () => await autoCarton.getAndInsertFaultsForAutoCarton(),
+				},
 				//{
 				//	name: "readShuttlesFaults",
 				//	task: async () => await plcShuttles.readShuttlesFaults(),
