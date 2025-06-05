@@ -37,13 +37,7 @@ cron.schedule("*/5 * * * * *", async () => {
 	});
 });
 
-//ever day at 02:00 restart the service
-cron.schedule("0 2 * * *", async () => {
-	logger.info("Restarting PLC To DB Service...");
 
-	//restart the service
-	process.exit(0);
-});
 
 //run every 5 seconds
 cron.schedule("*/5 * * * * *", async () => {
