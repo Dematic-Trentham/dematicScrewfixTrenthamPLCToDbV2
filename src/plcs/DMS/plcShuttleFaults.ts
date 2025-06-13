@@ -33,7 +33,16 @@ async function readShuttlesFaults() {
 
 	logger.error("Reading Shuttles Faults :(");
 
-	await checkDbForFaults();
+	// Run checkDbForFaults with a 20 second timeout
+	const timeoutPromise = new Promise((_, reject) =>
+		setTimeout(() => reject(new Error("checkDbForFaults timed out")), 20000)
+	);
+
+	try {
+		await Promise.race([checkDbForFaults(), timeoutPromise]);
+	} catch (error) {
+		logger.error("checkDbForFaults aborted: " + error);
+	}
 
 	functionCurrentlyRunning = false;
 }
