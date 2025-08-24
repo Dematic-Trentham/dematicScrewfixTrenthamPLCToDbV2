@@ -36,16 +36,26 @@ async function checkAllEMS() {
 		//{ name: "test", task: console.log("test") },
 	];
 
-	await Promise.all(
-		tasks.map(async ({ name, task }) => {
-			try {
-				await task;
-				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			} catch (error) {
-				logger.error(`Fault in ${name}`);
-			}
-		})
-	);
+	const concurrency = 3;
+	let index = 0;
+
+	async function runNext() {
+		if (index >= tasks.length) return;
+		const { name, task } = tasks[index++];
+		try {
+			await task;
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		} catch (error) {
+			logger.error(`Fault in ${name}`);
+		}
+		await runNext();
+	}
+
+	const runners = [];
+	for (let i = 0; i < concurrency; i++) {
+		runners.push(runNext());
+	}
+	await Promise.all(runners);
 }
 
 export default { checkAllEMS };
