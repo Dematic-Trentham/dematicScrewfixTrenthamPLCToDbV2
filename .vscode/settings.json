@@ -14,5 +14,17 @@
 		"typescriptreact"
 	],
 	"eslint.alwaysShowStatus": true,
-	"postman.settings.dotenv-detection-notification-visibility": false
+	"postman.settings.dotenv-detection-notification-visibility": false,
+	"files.watcherExclude": {
+  "**/node_modules/**": true,
+  "**/.git/**": true,
+  "**/dist/**": true,
+  "**/build/**": true
+},
+"search.exclude": {
+  "**/node_modules": true,
+  "**/dist": true,
+  "**/build": true
+}
+
 }
