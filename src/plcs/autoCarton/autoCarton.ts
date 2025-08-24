@@ -22,15 +22,24 @@ import { runTask, createTimedTasks } from "../../debuging.js";
 //this function will read the data from the PLC and store it in the database
 async function getAndInsertFaultsForAutoCarton() {
 	runTask("erectors", 5 * 1000, async () => {
+		const start = Date.now();
+		console.log("Running erector task...");
 		await getErectors();
+		console.log(`Finished erector task. Time taken: ${Date.now() - start}ms`);
 	});
 
 	runTask("ipacks", 5 * 1000, async () => {
+		const start = Date.now();
+		console.log("Running ipack task...");
 		await getIpacks();
+		console.log(`Finished ipack task. Time taken: ${Date.now() - start}ms`);
 	});
 
 	runTask("lidder", 5 * 1000, async () => {
+		const start = Date.now();
+		console.log("Running lidder task...");
 		await getLidders();
+		console.log(`Finished lidder task. Time taken: ${Date.now() - start}ms`);
 	});
 }
 
@@ -97,19 +106,19 @@ async function getErectors() {
 			task: async () => checkAndPingPLC("10.4.2.164", "erector", 5),
 		},
 	]);
-	await Promise.all(
-		tasks.map(({ name, task }) =>
-			task.catch((error) => {
-				//logger.error(`Error in function ${name}:`, error);
-
-				//add the error to the errors array
-				errors.push({
-					name: name,
-					error: error,
-				});
-			})
-		)
-	);
+	for (let i = 0; i < tasks.length; i += 3) {
+		const batch = tasks.slice(i, i + 3);
+		await Promise.all(
+			batch.map(({ name, task }) =>
+				task.catch((error) => {
+					errors.push({
+						name: name,
+						error: error,
+					});
+				})
+			)
+		);
+	}
 
 	return errors;
 }
@@ -157,16 +166,19 @@ async function getLidders() {
 		},
 	]);
 
-	await Promise.all(
-		tasks.map(({ name, task }) =>
-			task.catch((error) => {
-				errors.push({
-					name: name,
-					error: error,
-				});
-			})
-		)
-	);
+	for (let i = 0; i < tasks.length; i += 3) {
+		const batch = tasks.slice(i, i + 3);
+		await Promise.all(
+			batch.map(({ name, task }) =>
+				task.catch((error) => {
+					errors.push({
+						name: name,
+						error: error,
+					});
+				})
+			)
+		);
+	}
 
 	return errors;
 }
@@ -230,16 +242,19 @@ async function getIpacks() {
 		},
 	]);
 
-	await Promise.all(
-		tasks.map(({ name, task }) =>
-			task.catch((error) => {
-				errors.push({
-					name: name,
-					error: error,
-				});
-			})
-		)
-	);
+	for (let i = 0; i < tasks.length; i += 3) {
+		const batch = tasks.slice(i, i + 3);
+		await Promise.all(
+			batch.map(({ name, task }) =>
+				task.catch((error) => {
+					errors.push({
+						name: name,
+						error: error,
+					});
+				})
+			)
+		);
+	}
 
 	return errors;
 }

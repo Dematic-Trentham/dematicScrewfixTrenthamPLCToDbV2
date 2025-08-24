@@ -26,10 +26,10 @@ async function runTask(
 		const end = Date.now();
 		const duration = end - start;
 		if (debuging.timming) {
-			logger.info(
-				`Task ${name} completed in ${duration}ms. Time taken: ${time}ms` +
-					` (${((duration / time) * 100).toFixed(2)}% of expected time)`
-			);
+			//logger.info(
+			//	`Task ${name} completed in ${duration}ms. Time taken: ${time}ms` +
+			//` (${((duration / time) * 100).toFixed(2)}% of expected time)`;
+			//);
 		}
 		runningTasks.delete(name);
 	}
@@ -46,7 +46,7 @@ function createTimedTasks(
 			const end = Date.now();
 
 			if (debuging.timming) {
-				logger.info(`Task ${name} took ${end - start}ms`);
+				//logger.info(`Task ${name} took ${end - start}ms`);
 			}
 		})(),
 	}));

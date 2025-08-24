@@ -2,7 +2,7 @@
 //Created by: JWL
 //Date: 2025/03/02 02:51:41
 //Last modified: 2024/10/26 10:28:56
-const version = "1.0.1";
+const version = "1.0.2";
 
 // Handle unhandled promise rejections
 process.on("unhandledRejection", (reason, promise) => {
@@ -28,6 +28,7 @@ import logger from "./misc/logging.js";
 import { runTask, createTimedTasks } from "./debuging.js";
 
 cron.schedule("*/5 * * * * *", async () => {
+	return;
 	runTask("Cron 5s", 5 * 1000, async () => {
 		try {
 			await plcShuttles.readShuttlesFaults();
@@ -37,13 +38,9 @@ cron.schedule("*/5 * * * * *", async () => {
 	});
 });
 
-
-
 //run every 5 seconds
-cron.schedule("*/5 * * * * *", async () => {
-	//return;
-
-	runTask("Cron 5s", 5 * 1000, async () => {
+cron.schedule("*/15 * * * * *", async () => {
+	runTask("Cron 15s", 5 * 1000, async () => {
 		try {
 			logger.info("Running 5s cron job...");
 
@@ -56,10 +53,6 @@ cron.schedule("*/5 * * * * *", async () => {
 					name: "getAndInsertFaultsForAutoCarton",
 					task: async () => await autoCarton.getAndInsertFaultsForAutoCarton(),
 				},
-				//{
-				//	name: "readShuttlesFaults",
-				//	task: async () => await plcShuttles.readShuttlesFaults(),
-				//},
 			];
 
 			await Promise.all(
@@ -77,6 +70,7 @@ cron.schedule("*/5 * * * * *", async () => {
 
 //run every 5 minutes
 cron.schedule("*/5 * * * *", async () => {
+	return;
 	runTask("Cron 5m", 60 * 5 * 1000, async () => {
 		try {
 			const tasks = createTimedTasks([
@@ -101,7 +95,7 @@ cron.schedule("*/5 * * * *", async () => {
 
 //run every 10 seconds
 cron.schedule("*/10 * * * * *", async () => {
-	runTask("Cron 10 S", 10 * 1000, async () => {
+	runTask("Cron 10S", 10 * 1000, async () => {
 		try {
 			const tasks = createTimedTasks([
 				{ name: "readEMS10", task: async () => await emsZones.checkAllEMS() },
@@ -115,7 +109,7 @@ cron.schedule("*/10 * * * * *", async () => {
 				)
 			);
 		} catch (error) {
-			logger.error("Error in 30s cron job:", error);
+			logger.error("Error in 10s cron job:", error);
 		}
 	});
 });

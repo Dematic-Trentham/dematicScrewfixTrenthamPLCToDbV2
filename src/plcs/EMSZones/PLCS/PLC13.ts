@@ -36,7 +36,7 @@ export async function readEMSDataFromPLC13() {
 			bit: 0,
 		},
 		{
-			name: "PLC13_EEStopZone_Zone5",
+			name: "PLC13_EEStopZone_Zone5A",
 			location: "PLC13",
 			subLocation: "PLC13",
 			description: "EStop Monitoring Zone 5 ES_EMZ05 ( ASi Input )",
@@ -96,7 +96,7 @@ export async function readEMSDataFromPLC13() {
 			bit: 4,
 		},
 		{
-			name: "PLC13_EEStopZone_Zone5",
+			name: "PLC13_EEStopZone_Zone5B",
 			location: "PLC13",
 			subLocation: "PLC13",
 			description: "EStop Monitoring Zone 5",

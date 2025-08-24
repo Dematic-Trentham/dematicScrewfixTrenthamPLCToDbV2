@@ -20,42 +20,38 @@ import logger from "../../misc/logging.js";
 
 async function checkAllEMS() {
 	logger.info("Checking all EMS data");
-	const tasks = [
-		{ name: "PLC1", task: PLC1.readEMSDataFromPLC1() },
-		{ name: "PLC2", task: PLC2.readEMSDataFromPLC2() },
-		{ name: "PLC11", task: PLC11.readEMSDataFromPLC11() },
-		{ name: "PLC12", task: PLC12.readEMSDataFromPLC12() },
-		{ name: "PLC13", task: PLC13.readEMSDataFromPLC13() },
-		{ name: "PLC21", task: PLC21.readEMSDataFromPLC21() },
-		{ name: "PLC22", task: PLC22.readEMSDataFromPLC22() },
-		{ name: "PLC23", task: PLC23.readEMSDataFromPLC23() },
-		{ name: "PLC24", task: PLC24.readEMSDataFromPLC24() },
-		{ name: "PLC31", task: PLC31.readEMSDataFromPLC31() },
-		{ name: "PLC32", task: PLC32.readEMSDataFromPLC32() },
-		{ name: "PLC33", task: PLC33.readEMSDataFromPLC33() },
-		//{ name: "test", task: console.log("test") },
+
+	const startTime = Date.now();
+	const plcReadFunctions = [
+		{ name: "PLC1", fn: PLC1.readEMSDataFromPLC1 },
+		{ name: "PLC2", fn: PLC2.readEMSDataFromPLC2 },
+		{ name: "PLC11", fn: PLC11.readEMSDataFromPLC11 },
+		{ name: "PLC12", fn: PLC12.readEMSDataFromPLC12 },
+		{ name: "PLC13", fn: PLC13.readEMSDataFromPLC13 },
+		{ name: "PLC21", fn: PLC21.readEMSDataFromPLC21 },
+		{ name: "PLC22", fn: PLC22.readEMSDataFromPLC22 },
+		{ name: "PLC23", fn: PLC23.readEMSDataFromPLC23 },
+		{ name: "PLC24", fn: PLC24.readEMSDataFromPLC24 },
+		{ name: "PLC31", fn: PLC31.readEMSDataFromPLC31 },
+		{ name: "PLC32", fn: PLC32.readEMSDataFromPLC32 },
+		{ name: "PLC33", fn: PLC33.readEMSDataFromPLC33 },
 	];
 
-	const concurrency = 3;
-	let index = 0;
-
-	async function runNext() {
-		if (index >= tasks.length) return;
-		const { name, task } = tasks[index++];
-		try {
-			await task;
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		} catch (error) {
-			logger.error(`Fault in ${name}`);
-		}
-		await runNext();
+	for (let i = 0; i < plcReadFunctions.length; i += 3) {
+		const batch = plcReadFunctions.slice(i, i + 3);
+		const results = await Promise.allSettled(batch.map((item) => item.fn()));
+		results.forEach((result, idx) => {
+			if (result.status === "rejected") {
+				const plcName = batch[idx].name;
+				logger.error(
+					`Error reading EMS data from ${plcName}: ${result.reason}`
+				);
+			}
+		});
 	}
 
-	const runners = [];
-	for (let i = 0; i < concurrency; i++) {
-		runners.push(runNext());
-	}
-	await Promise.all(runners);
+	const endTime = Date.now();
+	logger.info(`All EMS PLCs checked in ${endTime - startTime} ms`);
 }
 
 export default { checkAllEMS };

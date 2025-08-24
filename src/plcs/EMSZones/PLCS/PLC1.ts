@@ -38,11 +38,11 @@ export async function readEMSDataFromPLC1() {
 		},
 	];
 
-	logger.error("Reading PLC1 EMS data");
+	logger.info("Reading PLC1 EMS data");
 
 	await readAndInsertMultiple(plcConfig, items);
 
-	logger.error("PLC1 EMS data read");
+	logger.info("PLC1 EMS data read");
 }
 
 export default { readEMSDataFromPLC1 };

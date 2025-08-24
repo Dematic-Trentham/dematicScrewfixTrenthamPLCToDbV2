@@ -60,7 +60,7 @@ async function plcToDB(
 					}
 				})
 				.catch((err) => {
-					logger.error("plcToDB 1 " + err);
+					logger.error("plcToDB 1 " + dbName + " " + err);
 				});
 
 			break;

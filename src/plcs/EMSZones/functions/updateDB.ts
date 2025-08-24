@@ -66,7 +66,7 @@ export async function readAndInsertMultiple(
 	s7client.SetParam(snap7Types.ParamNumber.RecvTimeout, 5000);
 	s7client.SetParam(snap7Types.ParamNumber.PingTimeout, 5000);
 
-	return new Promise<void>(() => {
+	return new Promise<void>((resolve, reject) => {
 		const s7client = new snap7.S7Client();
 		s7client.ConnectTo(
 			plcConfig.ip,
@@ -77,16 +77,20 @@ export async function readAndInsertMultiple(
 					logger.error(
 						"error for " + plcConfig.name + ": " + s7client.ErrorText(err)
 					);
+					reject(err);
+					await s7client.Disconnect();
 					return;
 				}
 
-				logger.error("Reading " + plcConfig.name + " EMS data - connected");
+				logger.info("Reading " + plcConfig.name + " EMS data - connected");
 
 				await s7client.MBRead(1, 200, async function (err: any, res: any) {
 					if (err) {
 						logger.error(
 							"error for " + plcConfig.name + ": " + s7client.ErrorText(err)
 						);
+						await s7client.Disconnect();
+						reject(err);
 						return;
 					}
 
@@ -94,19 +98,30 @@ export async function readAndInsertMultiple(
 					for (let i = 0; i < plcAreas.length; i++) {
 						//get the current item
 						const item = plcAreas[i];
+						try {
+							//get the value from the plc data
+							const byte = res[item.start - 1];
 
-						//get the value from the plc data
-						const byte = res[item.start - 1];
+							//get the bit from the plc data
+							const value = (byte >> item.bit) & 1;
 
-						//get the bit from the plc data
-						const value = (byte >> item.bit) & 1;
-
-						//insert the value into the db
-						await insertOrUpdateDataToDB(item, value.toString());
+							//insert the value into the db
+							await insertOrUpdateDataToDB(item, value.toString());
+						} catch (error) {
+							logger.error(
+								`Error inserting data for area ${item.name}:`,
+								error
+							);
+							await s7client.Disconnect();
+							reject(error);
+							return;
+						}
 					}
 
 					//disconnect from plc
 					await s7client.Disconnect();
+
+					resolve();
 				});
 			}
 		);
@@ -170,11 +185,7 @@ export async function insertOrUpdateDataToDB(plcArea: TPlcArea, data: string) {
 		},
 	});
 
-	//logger.error("Data exists: " + exists + " for area: " + plcArea.name);
-
 	if (exists) {
-		//logger.error("Updating data for area: " + plcArea.name);
-
 		await db.siteEMS.update({
 			where: {
 				name: plcArea.name,
@@ -185,8 +196,6 @@ export async function insertOrUpdateDataToDB(plcArea: TPlcArea, data: string) {
 			},
 		});
 	} else {
-		//logger.error("Inserting data for area: " + plcArea.name);
-
 		await db.siteEMS.create({
 			data: {
 				name: plcArea.name,
