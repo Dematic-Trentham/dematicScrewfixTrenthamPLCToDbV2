@@ -81,15 +81,15 @@ async function getLevel(
 			aisleBaseLocationDB
 		);
 
-		if (dataMac)
-			logger.info(
-				"Aisle: " +
-					dataMac.aisle +
-					" Level: " +
-					dataMac.level +
-					" Mac: " +
-					dataMac.mac
-			);
+		// if (dataMac)
+		// 	logger.info(
+		// 		"Aisle: " +
+		// 			dataMac.aisle +
+		// 			" Level: " +
+		// 			dataMac.level +
+		// 			" Mac: " +
+		// 			dataMac.mac
+		// 	);
 
 		const timeStamp = new Date().toISOString();
 

@@ -31,7 +31,7 @@ async function readShuttlesFaults() {
 
 	functionCurrentlyRunning = true;
 
-	logger.error("Reading Shuttles Faults :(");
+	//logger.error("Reading Shuttles Faults :(");
 
 	// Run checkDbForFaults with a 20 second timeout
 	const timeoutPromise = new Promise((_, reject) =>
@@ -60,11 +60,11 @@ async function checkDbForFaults() {
 	const aisleIPoffset = parseInt(aisleIPOffsetResult);
 	const dmsAisleFaultDB = parseInt(dmsAisleFaultDBResult);
 
-	logger.error("Amount of aisles: " + amountOfAisles);
-	logger.error("Amount of levels: " + amountOfLevels);
-	logger.error("Aisle base IP: " + aisleBaseIPResult);
-	logger.error("Aisle IP offset: " + aisleIPoffset);
-	logger.error("DMS Aisle Fault DB: " + dmsAisleFaultDB);
+	//	logger.error("Amount of aisles: " + amountOfAisles);
+	//	logger.error("Amount of levels: " + amountOfLevels);
+	//	logger.error("Aisle base IP: " + aisleBaseIPResult);
+	//	logger.error("Aisle IP offset: " + aisleIPoffset);
+	//	logger.error("DMS Aisle Fault DB: " + dmsAisleFaultDB);
 
 	//set all faults to not active
 	for (const location in currentlyInFaultArray) {
