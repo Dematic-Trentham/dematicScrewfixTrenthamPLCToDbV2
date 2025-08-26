@@ -28,7 +28,6 @@ import logger from "./misc/logging.js";
 import { runTask, createTimedTasks } from "./debuging.js";
 
 cron.schedule("*/5 * * * * *", async () => {
-	return;
 	runTask("Cron 5s", 5 * 1000, async () => {
 		try {
 			await plcShuttles.readShuttlesFaults();
