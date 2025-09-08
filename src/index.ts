@@ -5,9 +5,17 @@
 const version = "1.0.2";
 
 // Handle unhandled promise rejections
-//process.on("unhandledRejection", (reason, promise) => {
-//	logger.error("Unhandled Rejection at:", promise, "reason:", reason);
-//});
+process.on("unhandledRejection", (reason, promise) => {
+	logger.error("Unhandled Rejection at:", promise, "reason:", reason);
+
+	if (reason instanceof Error) {
+		logger.info(reason.stack);
+		logger.info(reason);
+		logger.info(reason.message);
+	} else {
+		logger.info(reason);
+	}
+});
 
 //startup text
 logger.info("Dematic Dashboard Micro Service - PLC To DB");
@@ -28,18 +36,18 @@ import autoCarton from "./plcs/autoCarton/autoCarton.js";
 import logger from "./misc/logging.js";
 
 import { runTask, createTimedTasks } from "./debuging.js";
-import { plcDmsLiftMissionsHourly } from "./plcs/DMS/plcDmsLiftMissions.js";
+import { plcDmsLiftMissions } from "./plcs/DMS/plcDmsLiftMissions.js";
 
-// Run plcDmsLiftMissionsHourly every hour
-cron.schedule("0 * * * *", async () => {
+// Run plcDmsLiftMissions every 10 minutes
+cron.schedule("*/10 * * * *", async () => {
 	if (Testing) return;
 
-	console.log("Running hourly cron job...");
+	logger.info("Running 10 minute cron job...");
 
 	try {
-		await plcDmsLiftMissionsHourly();
+		await plcDmsLiftMissions();
 	} catch (error) {
-		logger.error("Error in hour cron job (plcDmsLiftMissionsHourly):", error);
+		logger.error("Error in 10 minute cron job (plcDmsLiftMissions):", error);
 	}
 });
 

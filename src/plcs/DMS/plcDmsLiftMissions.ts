@@ -3,7 +3,7 @@ import db from "../../db/db.js";
 import { getParameterFromDB } from "../../misc/getParameterFromDB.js";
 import plc from "../../misc/plc/plc.js";
 
-export async function plcDmsLiftMissionsHourly() {
+export async function plcDmsLiftMissions() {
 	logger.info("Starting plcDmsLiftMissionsHourly...");
 
 	const amountOfAislesResult = await getParameterFromDB("dmsAmountOfAisles");
@@ -30,13 +30,25 @@ async function GetAisleLifts(
 	aisleIPOffset: number
 ) {
 	for (let lift = 1; lift < amountOfLifts + 1; lift++) {
-		const ip =
-			aisleBaseIP.toString() +
-			(aisleIPOffset + aisle).toString().padStart(3, "0");
+		await getAliseLift(aisleBaseIP, aisleIPOffset, aisle, lift);
+	}
+}
+async function getAliseLift(
+	aisleBaseIP: string,
+	aisleIPOffset: number,
+	aisle: number,
+	lift: number
+) {
+	const ip =
+		aisleBaseIP.toString() +
+		(aisleIPOffset + aisle).toString().padStart(3, "0");
 
-		//db offset for lift 1 is 510, lift 2 is 514, lift 3 is 518 etc (4 apart)
-		const makerOffset = 510 + (lift - 1) * 4;
+	//db offset for lift 1 is 510, lift 2 is 514, lift 3 is 518 etc (4 apart)
+	const makerOffset = 510 + (lift - 1) * 4;
 
+	let attempts = 0;
+	const maxAttempts = 3;
+	while (attempts < maxAttempts) {
 		try {
 			const liftMissionAmountRAW = await plc.readFromS7Markers(
 				ip,
@@ -54,7 +66,7 @@ async function GetAisleLifts(
 						: parseInt(liftMissionAmountRAW.toString());
 
 			const timestamp = new Date();
-			timestamp.setMinutes(0, 0, 0); // round down to the hour
+			timestamp.setMinutes(Math.floor(timestamp.getMinutes() / 10) * 10, 0, 0); // round down to the 10 minutes
 			timestamp.setSeconds(0, 0);
 			timestamp.setMilliseconds(0);
 
@@ -66,11 +78,16 @@ async function GetAisleLifts(
 					totalAtTime: liftMissionAmount,
 				},
 			});
+			break; // Success, exit loop
 		} catch (error) {
+			attempts++;
 			logger.error(
-				`Error processing aisle ${aisle}, lift ${lift} at IP ${ip}:`,
+				`Error processing aisle ${aisle}, lift ${lift} at IP ${ip}, attempt ${attempts}:`,
 				error
 			);
+			if (attempts < maxAttempts) {
+				await new Promise((res) => setTimeout(res, 5000));
+			}
 		}
 	}
 }
