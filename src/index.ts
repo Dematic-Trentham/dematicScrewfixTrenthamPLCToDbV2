@@ -30,13 +30,13 @@ import logger from "./misc/logging.js";
 import { runTask, createTimedTasks } from "./debuging.js";
 import { plcDmsLiftMissionsHourly } from "./plcs/DMS/plcDmsLiftMissions.js";
 
-// Run plcDmsLiftMissionsHourly every 15 minutes
-cron.schedule("*/15 * * * *", async () => {
+// Run plcDmsLiftMissionsHourly every hour
+cron.schedule("0 * * * *", async () => {
 	if (Testing) return;
 	try {
 		await plcDmsLiftMissionsHourly();
 	} catch (error) {
-		logger.error("Error in 15m cron job (plcDmsLiftMissionsHourly):", error);
+		logger.error("Error in hour cron job (plcDmsLiftMissionsHourly):", error);
 	}
 });
 
