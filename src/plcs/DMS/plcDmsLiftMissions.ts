@@ -4,6 +4,8 @@ import { getParameterFromDB } from "../../misc/getParameterFromDB.js";
 import plc from "../../misc/plc/plc.js";
 
 export async function plcDmsLiftMissionsHourly() {
+	logger.info("Starting plcDmsLiftMissionsHourly...");
+
 	const amountOfAislesResult = await getParameterFromDB("dmsAmountOfAisles");
 	const amountOfLiftsResult = await getParameterFromDB("dmsAmountOfLifts");
 	const aisleBaseIPResult = await getParameterFromDB("dmsAisleBaseIP");
