@@ -33,6 +33,9 @@ import { plcDmsLiftMissionsHourly } from "./plcs/DMS/plcDmsLiftMissions.js";
 // Run plcDmsLiftMissionsHourly every hour
 cron.schedule("0 * * * *", async () => {
 	if (Testing) return;
+
+	console.log("Running hourly cron job...");
+
 	try {
 		await plcDmsLiftMissionsHourly();
 	} catch (error) {

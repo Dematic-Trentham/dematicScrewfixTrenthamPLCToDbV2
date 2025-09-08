@@ -19,6 +19,8 @@ export async function plcDmsLiftMissionsHourly() {
 	for (let aisle = 1; aisle < amountOfAisles + 1; aisle++) {
 		await GetAisleLifts(aisle, amountOfLifts, aisleBaseIP, aisleIPoffset);
 	}
+
+	logger.info("Finished plcDmsLiftMissionsHourly.");
 }
 
 async function GetAisleLifts(
