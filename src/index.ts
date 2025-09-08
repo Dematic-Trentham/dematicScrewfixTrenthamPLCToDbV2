@@ -5,15 +5,17 @@
 const version = "1.0.2";
 
 // Handle unhandled promise rejections
-process.on("unhandledRejection", (reason, promise) => {
-	logger.error("Unhandled Rejection at:", promise, "reason:", reason);
-});
+//process.on("unhandledRejection", (reason, promise) => {
+//	logger.error("Unhandled Rejection at:", promise, "reason:", reason);
+//});
 
 //startup text
 logger.info("Dematic Dashboard Micro Service - PLC To DB");
 logger.info("Starting PLC To DB Service ....");
 
 logger.info("Starting PLC To DB Service v" + version + " ....");
+
+const Testing = false;
 
 //imports
 import cron from "node-cron";
@@ -26,8 +28,20 @@ import autoCarton from "./plcs/autoCarton/autoCarton.js";
 import logger from "./misc/logging.js";
 
 import { runTask, createTimedTasks } from "./debuging.js";
+import { plcDmsLiftMissionsHourly } from "./plcs/DMS/plcDmsLiftMissions.js";
+
+// Run plcDmsLiftMissionsHourly every 15 minutes
+cron.schedule("*/15 * * * *", async () => {
+	if (Testing) return;
+	try {
+		await plcDmsLiftMissionsHourly();
+	} catch (error) {
+		logger.error("Error in 15m cron job (plcDmsLiftMissionsHourly):", error);
+	}
+});
 
 cron.schedule("*/5 * * * * *", async () => {
+	if (Testing) return;
 	runTask("Cron 5s", 5 * 1000, async () => {
 		try {
 			await plcShuttles.readShuttlesFaults();
@@ -39,6 +53,7 @@ cron.schedule("*/5 * * * * *", async () => {
 
 //run every 5 seconds
 cron.schedule("*/15 * * * * *", async () => {
+	if (Testing) return;
 	runTask("Cron 15s", 5 * 1000, async () => {
 		try {
 			logger.info("Running 5s cron job...");
@@ -69,7 +84,7 @@ cron.schedule("*/15 * * * * *", async () => {
 
 //run every 5 minutes
 cron.schedule("*/5 * * * *", async () => {
-	return;
+	if (Testing) return;
 	runTask("Cron 5m", 60 * 5 * 1000, async () => {
 		try {
 			const tasks = createTimedTasks([
@@ -94,6 +109,7 @@ cron.schedule("*/5 * * * *", async () => {
 
 //run every 10 seconds
 cron.schedule("*/10 * * * * *", async () => {
+	if (Testing) return;
 	runTask("Cron 10S", 10 * 1000, async () => {
 		try {
 			const tasks = createTimedTasks([
