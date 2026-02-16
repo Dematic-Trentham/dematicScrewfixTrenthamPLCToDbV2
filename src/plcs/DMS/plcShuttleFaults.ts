@@ -49,11 +49,31 @@ async function readShuttlesFaults() {
 
 async function checkDbForFaults() {
 	//lets get the parameters from the database for the amount of aisles and levels
-	const amountOfAislesResult = await getParameterFromDB("dmsAmountOfAisles");
-	const amountOfLevelsResult = await getParameterFromDB("dmsAmountOfLevels");
-	const aisleBaseIPResult = await getParameterFromDB("dmsAisleBaseIP");
-	const aisleIPOffsetResult = await getParameterFromDB("dmsAisleIPOffset");
-	const dmsAisleFaultDBResult = await getParameterFromDB("dmsAisleFaultDB");
+	const amountOfAislesResult = await getParameterFromDB(
+		"dmsAmountOfAisles",
+		"This is the Amount of Aisles in the DMS, used for reading the shuttle counts from the PLC.",
+		"3"
+	);
+	const amountOfLevelsResult = await getParameterFromDB(
+		"dmsAmountOfLevels",
+		"This is the Amount of Levels in the DMS, used for reading the shuttle counts from the PLC.",
+		"25"
+	);
+	const aisleBaseIPResult = await getParameterFromDB(
+		"dmsAisleBaseIP",
+		"This is the Base IP for the DMS aisles, used for reading the shuttle counts from the PLC.",
+		"10.4.2."
+	);
+	const aisleIPOffsetResult = await getParameterFromDB(
+		"dmsAisleIPOffset",
+		"This is the IP Offset for the DMS aisles, used for reading the shuttle counts from the PLC.",
+		"100"
+	);
+	const dmsAisleFaultDBResult = await getParameterFromDB(
+		"dmsAisleFaultDB",
+		"This is the Database for the DMS aisle faults, used for reading the shuttle counts from the PLC.",
+		"2050"
+	);
 
 	const amountOfAisles = parseInt(amountOfAislesResult);
 	const amountOfLevels = parseInt(amountOfLevelsResult);

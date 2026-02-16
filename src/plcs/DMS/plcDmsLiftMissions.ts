@@ -6,10 +6,26 @@ import plc from "../../misc/plc/plc.js";
 export async function plcDmsLiftMissions() {
 	logger.info("Starting plcDmsLiftMissionsHourly...");
 
-	const amountOfAislesResult = await getParameterFromDB("dmsAmountOfAisles");
-	const amountOfLiftsResult = await getParameterFromDB("dmsAmountOfLifts");
-	const aisleBaseIPResult = await getParameterFromDB("dmsAisleBaseIP");
-	const aisleIPOffsetResult = await getParameterFromDB("dmsAisleIPOffset");
+	const amountOfAislesResult = await getParameterFromDB(
+		"dmsAmountOfAisles",
+		"This is the Amount of Aisles in the DMS, used for reading the shuttle counts from the PLC.",
+		"3"
+	);
+	const amountOfLiftsResult = await getParameterFromDB(
+		"dmsAmountOfLifts",
+		"This is the Amount of Lifts in the DMS, used for reading the shuttle counts from the PLC.",
+		"4"
+	);
+	const aisleBaseIPResult = await getParameterFromDB(
+		"dmsAisleBaseIP",
+		"This is the Base IP for the DMS aisles, used for reading the shuttle counts from the PLC.",
+		"10.4.2."
+	);
+	const aisleIPOffsetResult = await getParameterFromDB(
+		"dmsAisleIPOffset",
+		"This is the IP Offset for the DMS aisles, used for reading the shuttle counts from the PLC.",
+		"100"
+	);
 
 	const amountOfAisles = parseInt(amountOfAislesResult);
 	const amountOfLifts = parseInt(amountOfLiftsResult);

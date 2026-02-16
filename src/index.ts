@@ -51,6 +51,7 @@ cron.schedule("*/10 * * * *", async () => {
 	}
 });
 
+//run every 5 seconds
 cron.schedule("*/5 * * * * *", async () => {
 	if (Testing) return;
 	runTask("Cron 5s", 5 * 1000, async () => {
@@ -62,7 +63,7 @@ cron.schedule("*/5 * * * * *", async () => {
 	});
 });
 
-//run every 5 seconds
+//run every 15 seconds
 cron.schedule("*/15 * * * * *", async () => {
 	if (Testing) return;
 	runTask("Cron 15s", 5 * 1000, async () => {
@@ -103,6 +104,10 @@ cron.schedule("*/5 * * * *", async () => {
 					name: "readShuttlesLocations",
 					task: async () => await plcShuttles.readShuttlesLocations(),
 				},
+				{
+					name: "readShuttlesCounts",
+					task: async () => await plcShuttles.readShuttlesCounts(),
+				},
 			]);
 
 			await Promise.all(
@@ -139,3 +144,4 @@ cron.schedule("*/10 * * * * *", async () => {
 		}
 	});
 });
+await plcShuttles.readShuttlesCounts();

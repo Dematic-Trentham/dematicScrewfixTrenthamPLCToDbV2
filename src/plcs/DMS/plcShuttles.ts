@@ -6,12 +6,20 @@
 
 import plcShuttlesLocations from "./plcShuttlesLocations.js";
 import plcShuttlesFaults from "./plcShuttleFaults.js";
+import plcShuttlesCounts from "./plcShuttleCounts.js";
 
 async function readShuttlesLocations() {
-  plcShuttlesLocations.readShuttlesToDB();
+	plcShuttlesLocations.readShuttlesToDB();
 }
 async function readShuttlesFaults() {
-  plcShuttlesFaults.readShuttlesFaults();
+	plcShuttlesFaults.readShuttlesFaults();
+}
+async function readShuttlesCounts() {
+	plcShuttlesCounts.readShuttlesCounts();
 }
 
-export default { readShuttlesLocations, readShuttlesFaults };
+export default {
+	readShuttlesLocations,
+	readShuttlesFaults,
+	readShuttlesCounts,
+};
