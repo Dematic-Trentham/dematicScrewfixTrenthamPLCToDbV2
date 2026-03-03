@@ -17,6 +17,7 @@ import { addFaultsToDB } from "./faultAdder.js";
 type autoCartonMachineType = "erector" | "Lidder" | "iPack";
 
 import { runTask, createTimedTasks } from "../../debuging.js";
+import logger from "src/misc/logging.js";
 
 //function to be run from the main program every 10 seconds
 //this function will read the data from the PLC and store it in the database
@@ -265,7 +266,7 @@ async function checkAndPingPLC(
 	});
 
 	if (machineData == null) {
-		//	logger.error(`No data for 60 seconds for ${machineType} ${line}`);
+		logger.error(`No data for 60 seconds for ${machineType} ${line}`);
 
 		// No data for 60 seconds, let's ping the PLC
 		const pingPromise = ping.promise.probe(ip, {
@@ -277,11 +278,11 @@ async function checkAndPingPLC(
 		);
 		const res: any = await Promise.race([pingPromise, timeoutPromise]);
 		if (res.alive) {
-			//logger.error(`PLC ${ip} is reachable`);
+			logger.error(`PLC ${ip} is reachable`);
 			// Update the watchdog timer and add a watchdog to the db
 			addFaultsToDB(machineType, "watchdog", line);
 		} else {
-			//	logger.error(`PLC ${ip} is not reachable`);
+			logger.error(`PLC ${ip} is not reachable`);
 		}
 	}
 }

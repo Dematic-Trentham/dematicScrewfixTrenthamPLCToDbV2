@@ -1,4 +1,5 @@
 type autoCartonMachineType = "erector" | "Lidder" | "iPack";
+import logger from "src/misc/logging.js";
 import db from "../../db/db.js";
 
 export async function addFaultsToDB(
@@ -30,7 +31,7 @@ export async function addFaultsToDB(
 			},
 		});
 
-		//	logger.info("Fault code created in DB: ", faultCode.ID);
+		logger.info("Fault code created in DB: ", faultCode.ID);
 
 		faultCodeID = faultCode.ID;
 	}
