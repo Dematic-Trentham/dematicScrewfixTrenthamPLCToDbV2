@@ -63,12 +63,12 @@ cron.schedule("*/5 * * * * *", async () => {
 	});
 });
 
-//run every 15 seconds
-cron.schedule("*/15 * * * * *", async () => {
+//run every 10 seconds
+cron.schedule("*/10 * * * * *", async () => {
 	if (Testing) return;
-	runTask("Cron 15s", 5 * 1000, async () => {
+	runTask("Cron 10s", 10 * 1000, async () => {
 		try {
-			logger.info("Running 5s cron job...");
+			logger.info("Running 10s cron job...");
 
 			const tasks = [
 				{
@@ -89,7 +89,7 @@ cron.schedule("*/15 * * * * *", async () => {
 				)
 			);
 		} catch (error) {
-			logger.error("Error in 5s cron job:", error);
+			logger.error("Error in 10s cron job:", error);
 		}
 	});
 });

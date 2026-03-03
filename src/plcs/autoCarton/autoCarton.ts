@@ -60,20 +60,12 @@ async function getErectors() {
 		{
 			name: "erector2",
 			task: async () =>
-				oldCartonErector.getAndInsertFaultsForOldErector(
-					"10.4.2.161",
-					"erector",
-					2
-				),
+				newCartonErector.getAndInsertFaults("10.4.2.161", "erector", 2),
 		},
 		{
 			name: "erector3",
 			task: async () =>
-				oldCartonErector.getAndInsertFaultsForOldErector(
-					"10.4.2.162",
-					"erector",
-					3
-				),
+				newCartonErector.getAndInsertFaults("10.4.2.162", "erector", 3),
 		},
 		{
 			name: "erector4",
