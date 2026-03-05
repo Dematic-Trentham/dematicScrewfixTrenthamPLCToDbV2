@@ -17,7 +17,7 @@ import { addFaultsToDB } from "./faultAdder.js";
 type autoCartonMachineType = "erector" | "Lidder" | "iPack";
 
 import { runTask, createTimedTasks } from "../../debuging.js";
-import logger from "src/misc/logging.js";
+import logger from "../../misc/logging.js";
 
 //function to be run from the main program every 10 seconds
 //this function will read the data from the PLC and store it in the database
