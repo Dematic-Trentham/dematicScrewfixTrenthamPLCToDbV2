@@ -1,5 +1,5 @@
 type autoCartonMachineType = "erector" | "Lidder" | "iPack";
-import logger from "src/misc/logging.js";
+import logger from "../../misc/logging.js";
 import db from "../../db/db.js";
 
 export async function addFaultsToDB(
