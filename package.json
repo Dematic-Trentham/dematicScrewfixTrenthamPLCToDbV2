@@ -35,7 +35,8 @@
 		"node-snap7": "^1.0.7",
 		"ping": "^0.4.4",
 		"winston": "^3.17.0",
-		"winston-daily-rotate-file": "^5.0.0"
+		"winston-daily-rotate-file": "^5.0.0",
+		"dotenv": "^17.3.1"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.22.0",
