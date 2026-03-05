@@ -13,7 +13,7 @@
 		"startDevDockInspect": "nodemon build/index.js --inspect-brk=0.0.0.0",
 		"buildOnce": "tsc",
 		"build": "tsc --watch",
-		"prisma-merge": "prisma format --schema=./node_modules/masterPrismaSchema/prisma/ && npm run prisma-gen && echo 'complete!'",
+		"prisma-merge": "prisma format --schema=./node_modules/masterPrismaSchema/prisma && npm run prisma-gen && echo 'complete!'",
 		"prisma-gen": "prisma generate --schema=./node_modules/masterPrismaSchema/prisma",
 		"prisma-pull": "npx prisma db pull --schema=./node_modules/masterPrismaSchema/prisma",
 		"prisma-push": "npx prisma db push --schema=./node_modules/masterPrismaSchema/prisma",
