@@ -23,6 +23,12 @@ logger.info("Starting PLC To DB Service ....");
 
 logger.info("Starting PLC To DB Service v" + version + " ....");
 
+console.log("DATABASE_HOST:", process.env.DATABASE_HOST);
+console.log("DATABASE_USER:", process.env.DATABASE_USER);
+console.log("DATABASE_PASSWORD:", process.env.DATABASE_PASSWORD);
+console.log("DATABASE_NAME:", process.env.DATABASE_NAME);
+console.log("CONNECTION_LIMIT:", 25);
+
 const Testing = false;
 
 //imports
