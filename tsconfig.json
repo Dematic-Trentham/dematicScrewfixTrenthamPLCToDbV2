@@ -5,8 +5,10 @@
 		"lib": ["es2020", "dom"],
 		"allowJs": true,
 		"outDir": "build",
+		"rootDir": "./src",
 		"strict": true,
 		"esModuleInterop": true,
+		"ignoreDeprecations": "5.0",
 		"moduleResolution": "node",
 		"forceConsistentCasingInFileNames": true,
 		"allowSyntheticDefaultImports": true,
@@ -14,7 +16,6 @@
 		"isolatedModules": true,
 		"resolveJsonModule": true,
 		"baseUrl": ".",
-		"ignoreDeprecations": "5.0",
 		"sourceMap": true
 	},
 	"include": ["src/**/*", "src/**/*.ts", "src/**/*.tsx", "src/**/**/**/*.ts"],
