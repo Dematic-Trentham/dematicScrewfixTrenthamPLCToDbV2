@@ -147,7 +147,8 @@ async function getLevel(
 					macAddress: oldShuttleInLocation.macAddress,
 				},
 				data: {
-					currentLocation: "",
+					//we have taken the shuttle out of the location, so we are unsure why, so we set it to unknown
+					currentLocation: "unknown",
 					locationLastUpdated: timeStamp,
 				},
 			});
