@@ -99,13 +99,13 @@ async function getLevel(
 			aisleBaseLocationDB
 		);
 
-		const dataFirmware = await getShuttleFirmware(
-			aisle,
-			level,
-			aisleBaseIP,
-			aisleIPOffset,
-			aisleBaseLocationDB
-		);
+		// const dataFirmware = await getShuttleFirmware(
+		// 	aisle,
+		// 	level,
+		// 	aisleBaseIP,
+		// 	aisleIPOffset,
+		// 	aisleBaseLocationDB
+		// );
 
 		// if (dataMac)
 		// 	logger.info(
@@ -137,14 +137,14 @@ async function getLevel(
 				shuttleID: "Unknown " + dataMac.mac,
 				currentLocation: `MSAI${paddy(dataMac.aisle, 2)}LV${paddy(dataMac.level, 2)}SH01`,
 				locationLastUpdated: timeStamp,
-				currentFirmwareVersion: dataFirmware.firmware,
-				lastFirmwareUpdate: timeStamp,
+				//currentFirmwareVersion: dataFirmware.firmware,
+				//lastFirmwareUpdate: timeStamp,
 			},
 			update: {
 				currentLocation: `MSAI${paddy(dataMac.aisle, 2)}LV${paddy(dataMac.level, 2)}SH01`,
 				locationLastUpdated: timeStamp,
-				currentFirmwareVersion: dataFirmware.firmware,
-				lastFirmwareUpdate: timeStamp,
+				//currentFirmwareVersion: dataFirmware.firmware,
+				//lastFirmwareUpdate: timeStamp,
 			},
 		});
 
@@ -162,8 +162,8 @@ async function getLevel(
 					//we have taken the shuttle out of the location, so we are unsure why, so we set it to unknown
 					currentLocation: "unknown",
 					locationLastUpdated: timeStamp,
-					currentFirmwareVersion: dataFirmware.firmware,
-					lastFirmwareUpdate: timeStamp,
+					////currentFirmwareVersion: dataFirmware.firmware,
+					//lastFirmwareUpdate: timeStamp,
 				},
 			});
 
