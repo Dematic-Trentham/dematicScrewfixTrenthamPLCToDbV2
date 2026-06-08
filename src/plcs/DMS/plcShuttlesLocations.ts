@@ -240,7 +240,7 @@ function getShuttleFirmware(
 				0x84,
 				aisleBaseLocationDB + level,
 				1798,
-				59,
+				58,
 				0x01,
 				function (err, data) {
 					if (err) reject(s7client.ErrorText(err));
