@@ -99,6 +99,14 @@ async function getLevel(
 			aisleBaseLocationDB
 		);
 
+		const dataFirmware = await getShuttleFirmware(
+			aisle,
+			level,
+			aisleBaseIP,
+			aisleIPOffset,
+			aisleBaseLocationDB
+		);
+
 		// if (dataMac)
 		// 	logger.info(
 		// 		"Aisle: " +
@@ -129,10 +137,14 @@ async function getLevel(
 				shuttleID: "Unknown " + dataMac.mac,
 				currentLocation: `MSAI${paddy(dataMac.aisle, 2)}LV${paddy(dataMac.level, 2)}SH01`,
 				locationLastUpdated: timeStamp,
+				firmwareVersion: dataFirmware.firmware,
+				firmwareLastUpdated: timeStamp,
 			},
 			update: {
 				currentLocation: `MSAI${paddy(dataMac.aisle, 2)}LV${paddy(dataMac.level, 2)}SH01`,
 				locationLastUpdated: timeStamp,
+				firmwareVersion: dataFirmware.firmware,
+				firmwareLastUpdated: timeStamp,
 			},
 		});
 
@@ -150,6 +162,8 @@ async function getLevel(
 					//we have taken the shuttle out of the location, so we are unsure why, so we set it to unknown
 					currentLocation: "unknown",
 					locationLastUpdated: timeStamp,
+					firmwareVersion: dataFirmware.firmware,
+					firmwareLastUpdated: timeStamp,
 				},
 			});
 
@@ -200,6 +214,43 @@ function getShuttleData(
 						level: level,
 						mac: stringToCapital(toHexString(data)),
 					};
+					resolve(tempArray);
+				}
+			);
+		});
+
+		//return promise;
+	});
+}
+
+function getShuttleFirmware(
+	aisle: number,
+	level: number,
+	baseIP: string,
+	ipOffset: number,
+	aisleBaseLocationDB: number
+) {
+	return new Promise<any>(function (resolve, reject) {
+		s7client.ConnectTo(baseIP + (ipOffset + aisle), 0, 1, async function (err) {
+			if (err) reject(s7client.ErrorText(err));
+
+			//Loop through the levels
+
+			s7client.ReadArea(
+				0x84,
+				aisleBaseLocationDB + level,
+				1798,
+				59,
+				0x01,
+				function (err, data) {
+					if (err) reject(s7client.ErrorText(err));
+
+					const tempArray = {
+						aisle: aisle,
+						level: level,
+						firmware: stringToCapital(toHexString(data)),
+					};
+					console.log(tempArray);
 					resolve(tempArray);
 				}
 			);
