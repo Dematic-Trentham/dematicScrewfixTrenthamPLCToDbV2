@@ -12,7 +12,6 @@
 		"allowSyntheticDefaultImports": true,
 		"noFallthroughCasesInSwitch": true,
 		"isolatedModules": true,
-		"moduleResolution": "node",
 		"resolveJsonModule": true,
 
 		"ignoreDeprecations": "5.0",
