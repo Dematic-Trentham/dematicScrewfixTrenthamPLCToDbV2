@@ -45,9 +45,7 @@ const adapter = new PrismaMariaDb({
 	connectionLimit: 5,
 });
 
-export const db =
-	globalForPrisma.db ??
-	new PrismaClient({ adapter, log: ["query", "info", "warn", "error"] });
+export const db = globalForPrisma.db ?? new PrismaClient({ adapter });
 
 globalForPrisma.db = db;
 
