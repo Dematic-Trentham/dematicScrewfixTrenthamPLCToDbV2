@@ -159,7 +159,7 @@ async function getShuttleCountsLevel(
 					totalPicks: realPicks,
 					totalDrops: realDrops,
 					totalIATs: realIATs,
-					timeRange: "5 minutes",
+					timeRange: "hour",
 					timeStamp: new Date(),
 					realTotalKM: realTotalKM,
 				},

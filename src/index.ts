@@ -57,6 +57,17 @@ cron.schedule("*/10 * * * *", async () => {
 	}
 });
 
+//every hour run
+cron.schedule("0 * * * *", async () => {
+	if (Testing) return;
+	logger.info("Running hourly cron job...");
+
+	try {
+		await plcShuttles.readShuttlesCounts();
+	} catch (error) {
+		logger.error("Error in hourly cron job (readShuttlesCounts):", error);
+	}
+});
 //run every 5 seconds
 cron.schedule("*/5 * * * * *", async () => {
 	if (Testing) return;
@@ -109,10 +120,6 @@ cron.schedule("*/5 * * * *", async () => {
 				{
 					name: "readShuttlesLocations",
 					task: async () => await plcShuttles.readShuttlesLocations(),
-				},
-				{
-					name: "readShuttlesCounts",
-					task: async () => await plcShuttles.readShuttlesCounts(),
 				},
 			]);
 
