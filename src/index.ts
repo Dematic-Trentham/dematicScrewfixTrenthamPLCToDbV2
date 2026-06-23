@@ -27,7 +27,7 @@ console.log("DATABASE_HOST:", process.env.DATABASE_HOST);
 console.log("DATABASE_USER:", process.env.DATABASE_USER);
 console.log("DATABASE_PASSWORD:", process.env.DATABASE_PASSWORD);
 console.log("DATABASE_NAME:", process.env.DATABASE_NAME);
-console.log("CONNECTION_LIMIT:", 25);
+console.log("CONNECTION_LIMIT:", process.env.CONNECTION_LIMIT);
 
 const Testing = false;
 
@@ -157,4 +157,3 @@ cron.schedule("*/10 * * * * *", async () => {
 		}
 	});
 });
-await plcShuttles.readShuttlesCounts();
