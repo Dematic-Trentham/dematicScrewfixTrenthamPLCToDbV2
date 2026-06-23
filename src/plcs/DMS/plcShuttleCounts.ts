@@ -7,6 +7,10 @@ import {
 	T_ShuttleStats,
 } from "./plcShuttleStatsType.js";
 
+import { Buffer } from "node:buffer";
+
+import fs from "fs";
+
 const lastShuttleCounts: {
 	[aisle: number]: {
 		[level: number]: { picks: number; drops: number; iat: number };
@@ -55,7 +59,7 @@ async function readShuttlesCounts() {
 			amountOfLevels,
 			aisleBaseIP,
 			aisleIPoffset,
-			dmsAisleStatsDB
+			2402
 		);
 	}
 }
@@ -67,16 +71,171 @@ async function getShuttleCountsAisle(
 	aisleIPoffset: number,
 	dmsAisleStatsDB: number
 ) {
-	for (let level = 1; level < amountOfLevels + 1; level++) {
-		//Loop through the levels
-		await getShuttleCountsLevel(
-			aisle,
-			level,
-			aisleBaseIP,
-			aisleIPoffset,
-			dmsAisleStatsDB
+	// for (let level = 1; level < amountOfLevels + 1; level++) {
+	// 	//Loop through the levels
+	// 	await getShuttleCountsLevel(
+	// 		aisle,
+	// 		level,
+	// 		aisleBaseIP,
+	// 		aisleIPoffset,
+	// 		dmsAisleStatsDB
+	// 	);
+	// }
+
+	await getShuttleCountsAllLevels(
+		aisle,
+		amountOfLevels,
+		aisleBaseIP,
+		aisleIPoffset,
+		dmsAisleStatsDB
+	);
+}
+
+async function getShuttleCountsAllLevels(
+	aisle: number,
+	amountOfLevels: number,
+	aisleBaseIP: string,
+	aisleIPoffset: number,
+	dmsCnvStatDB: number
+) {
+	const ip = aisleBaseIP + (aisleIPoffset + aisle).toString();
+
+	try {
+		const buffer = await plc.readFromS7DbRAW(ip, 0, 1, dmsCnvStatDB, 0, 19558);
+
+		//write the buffer to a file for debugging
+		//fs.writeFileSync(`./shuttleCountsAisle${aisle}.bin`, buffer);
+
+		//infeed 1 level 1 is at 1112, level 2 at 1122 , level 25 at 1352
+		//infeed 2 level 1 is at 1512, level 2 at 1522 , level 25 at 1752
+
+		//outfeed 1 level 1 is at 1114, level 2 at 1124 , level 25 at 1354
+		//outfeed 2 level 1 is at 1116, level 2 at 1126 , level 25 at 1356
+
+		//get the shuttle in the database for this aisle and level
+		const shuttleInDB = await db.dmsShuttleLocations.findMany({});
+
+		const latestGroups = await db.dmsShuttleMissions.groupBy({
+			by: ["aisle", "level"],
+			_max: {
+				timeStamp: true,
+			},
+		});
+
+		const latestRows = await Promise.all(
+			latestGroups.map((group) =>
+				db.dmsShuttleMissions.findFirst({
+					where: {
+						aisle: group.aisle,
+						level: group.level,
+						timeStamp: group._max.timeStamp!,
+					},
+				})
+			)
+		);
+		//console.log(`Latest shuttle mission records for aisle ${aisle}:`);
+		//console.log(latestRows);
+		//console.log(latestRows.length);
+		//process.exit(0);
+
+		for (let level = 1; level < amountOfLevels + 1; level++) {
+			const startingByteInfeed1 = (1112 + (level - 1) * 10) * 22 - 1000 * 22; // Calculate the starting byte for the current level
+			const startingByteInfeed2 = (1512 + (level - 1) * 10) * 22 - 1000 * 22; // Calculate the starting byte for the current level
+			const startingByteOutfeed1 = (1114 + (level - 1) * 10) * 22 - 1000 * 22; // Calculate the starting byte for the current level
+			const startingByteOutfeed2 = (1116 + (level - 1) * 10) * 22 - 1000 * 22; // Calculate the starting byte for the current level
+
+			//read into shuttle stats object
+			const infeed1 = await readShuttleStatsFromBufferLevel(
+				buffer.slice(startingByteInfeed1, startingByteInfeed1 + 22)
+			);
+
+			const infeed2 = await readShuttleStatsFromBufferLevel(
+				buffer.slice(startingByteInfeed2, startingByteInfeed2 + 22)
+			);
+
+			const outfeed1 = await readShuttleStatsFromBufferLevel(
+				buffer.slice(startingByteOutfeed1, startingByteOutfeed1 + 22)
+			);
+
+			const outfeed2 = await readShuttleStatsFromBufferLevel(
+				buffer.slice(startingByteOutfeed2, startingByteOutfeed2 + 22)
+			);
+
+			const totalPicks = infeed1.itemStarts + infeed2.itemStarts;
+			const totalDrops = outfeed1.itemStarts + outfeed2.itemStarts;
+
+			//cacluate the current Level
+			const currentLocation = `MSAI${aisle.toString().padStart(2, "0")}LV${level.toString().padStart(2, "0")}SH01`;
+
+			//get the shuttle in the database for this aisle and level
+			const shuttleAtLevelInDB = shuttleInDB.find(
+				(shuttle) => shuttle.currentLocation === currentLocation
+			);
+			console.log(
+				`Aisle ${aisle} Level ${level} - Picks: ${totalPicks}, Drops: ${totalDrops}, Shuttle ID: ${shuttleAtLevelInDB ? shuttleAtLevelInDB.shuttleID : "Unknown"}`
+			);
+
+			let latestRow: any = null;
+
+			//get the delta
+			if (latestRows.length > 0) {
+				latestRow = latestRows.find(
+					(row) => row?.aisle === aisle && row?.level === level
+				);
+			}
+
+			// caculate the difference in counts since the last time we read the counts for this aisle and level, and write it to the database with a timestamp and the shuttle ID if we have it, if not write unknown as the shuttle ID
+			const realPicks = latestRow ? totalPicks - latestRow.totalPicks : 0;
+			const realDrops = latestRow ? totalDrops - latestRow.totalDrops : 0;
+
+			//lets create a new record in the Shuttle missions table with the shuttle stats and the shuttle location from the database
+			await db.dmsShuttleMissions.create({
+				data: {
+					aisle: aisle,
+					level: level,
+					shuttleID: shuttleAtLevelInDB
+						? shuttleAtLevelInDB.shuttleID
+						: "Unknown",
+					totalPicks: realPicks,
+					totalDrops: realDrops,
+					timeRange: "hour",
+					timeStamp: new Date(),
+					runningPicks: totalPicks,
+					runningDrops: totalDrops,
+				},
+			});
+		}
+	} catch (error) {
+		logger.error(
+			` :( Error reading shuttle counts from PLC at IP ${ip} for aisle ${aisle}: ${error}`
 		);
 	}
+}
+
+type ShuttleStats = {
+	motorStarts: number;
+	itemStarts: number;
+	faultCount: number;
+	hoursRun: number;
+	minsRun: number;
+	msRun: number;
+};
+
+async function readShuttleStatsFromBufferLevel(
+	buffer: Buffer
+): Promise<ShuttleStats> {
+	//structure of the buffer is 22 bytes per level, 4- motorStarts, 4- itemStarts, 4-faultCount,4- hoursRun, 2- minsRun, 4- MsRun
+
+	const statsObject: ShuttleStats = {
+		motorStarts: buffer.readUInt32BE(0),
+		itemStarts: buffer.readUInt32BE(4),
+		faultCount: buffer.readUInt32BE(8),
+		hoursRun: buffer.readUInt32BE(12),
+		minsRun: buffer.readUInt16BE(16),
+		msRun: buffer.readUInt32BE(18),
+	};
+
+	return statsObject;
 }
 
 async function getShuttleCountsLevel(
