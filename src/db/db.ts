@@ -42,7 +42,7 @@ const adapter = new PrismaMariaDb({
 	user: process.env.DATABASE_USER,
 	password: process.env.DATABASE_PASSWORD,
 	database: process.env.DATABASE_NAME,
-	connectionLimit: parseInt(process.env.CONNECTION_LIMIT || "5", 10),
+	connectionLimit: parseInt(process.env.CONNECTION_LIMIT || "1", 10),
 	acquireTimeout: parseInt(process.env.ACQUIRE_TIMEOUT || "20000", 10), // 20 seconds
 });
 
