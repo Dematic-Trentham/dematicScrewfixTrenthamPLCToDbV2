@@ -185,8 +185,8 @@ async function getShuttleCountsAllLevels(
 			}
 
 			// caculate the difference in counts since the last time we read the counts for this aisle and level, and write it to the database with a timestamp and the shuttle ID if we have it, if not write unknown as the shuttle ID
-			const realPicks = latestRow ? totalPicks - latestRow.totalPicks : 0;
-			const realDrops = latestRow ? totalDrops - latestRow.totalDrops : 0;
+			const realPicks = latestRow ? totalPicks - latestRow.runningPicks : 0;
+			const realDrops = latestRow ? totalDrops - latestRow.runningDrops : 0;
 
 			//lets create a new record in the Shuttle missions table with the shuttle stats and the shuttle location from the database
 			await db.dmsShuttleMissions.create({
