@@ -4,18 +4,18 @@
 //Last modified: 2024/10/26 10:28:56
 const version = "1.0.2";
 
-// Handle unhandled promise rejections
-process.on("unhandledRejection", (reason, promise) => {
-	logger.error("Unhandled Rejection at:", promise, "reason:", reason);
+// // Handle unhandled promise rejections
+// process.on("unhandledRejection", (reason, promise) => {
+// 	logger.error("Unhandled Rejection at:", promise, "reason:", reason);
 
-	if (reason instanceof Error) {
-		logger.info(reason.stack);
-		logger.info(reason);
-		logger.info(reason.message);
-	} else {
-		logger.info(reason);
-	}
-});
+// 	if (reason instanceof Error) {
+// 		logger.info(reason.stack);
+// 		logger.info(reason);
+// 		logger.info(reason.message);
+// 	} else {
+// 		logger.info(reason);
+// 	}
+// });
 
 //startup text
 logger.info("Dematic Dashboard Micro Service - PLC To DB");
@@ -92,10 +92,10 @@ cron.schedule("*/10 * * * * *", async () => {
 					name: "readDataFromPLC31TenSeconds",
 					task: async () => await plc31.readDataFromPLC31TenSeconds(),
 				},
-				{
-					name: "getAndInsertFaultsForAutoCarton",
-					task: async () => await autoCarton.getAndInsertFaultsForAutoCarton(),
-				},
+				//{
+				//	name: "getAndInsertFaultsForAutoCarton",
+				//	task: async () => await autoCarton.getAndInsertFaultsForAutoCarton(),
+				//},
 			];
 
 			await Promise.all(
