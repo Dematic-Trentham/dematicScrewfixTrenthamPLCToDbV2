@@ -226,7 +226,7 @@ async function checkIfFaultsAreStillActive() {
 			//reset the fault
 			currentlyInFaultArray[location].fault = "false";
 
-			await db.dmsShuttleFaultLogs.update({
+			db.dmsShuttleFaultLogs.update({
 				where: {
 					ID: currentlyInFaultArray[location].id.toString(),
 				},
@@ -245,7 +245,7 @@ async function checkIfFaultsAreStillActive() {
 clearAllFaults();
 //when starting, clear all faults in the db that are not resolved, "with a resolved timestamp"
 async function clearAllFaults() {
-	await db.dmsShuttleFaultLogs.updateMany({
+	db.dmsShuttleFaultLogs.updateMany({
 		where: {
 			resolvedReason: "",
 		},
