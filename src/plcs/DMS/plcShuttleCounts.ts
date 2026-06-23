@@ -171,9 +171,9 @@ async function getShuttleCountsAllLevels(
 			const shuttleAtLevelInDB = shuttleInDB.find(
 				(shuttle) => shuttle.currentLocation === currentLocation
 			);
-			console.log(
-				`Aisle ${aisle} Level ${level} - Picks: ${totalPicks}, Drops: ${totalDrops}, Shuttle ID: ${shuttleAtLevelInDB ? shuttleAtLevelInDB.shuttleID : "Unknown"}`
-			);
+			//	console.log(
+			//	`Aisle ${aisle} Level ${level} - Picks: ${totalPicks}, Drops: ${totalDrops}, Shuttle ID: ${shuttleAtLevelInDB ? shuttleAtLevelInDB.shuttleID : "Unknown"}`
+			//	);
 
 			let latestRow: any = null;
 
@@ -317,18 +317,20 @@ async function getShuttleCountsLevel(
 					shuttleID: shuttleInDB ? shuttleInDB.shuttleID : "Unknown",
 					totalPicks: realPicks,
 					totalDrops: realDrops,
-					totalIATs: realIATs,
+					//totalIATs: realIATs,
 					timeRange: "hour",
 					timeStamp: new Date(),
-					realTotalKM: realTotalKM,
+					//realTotalKM: realTotalKM,
+					runningPicks: 0,
+					runningDrops: 0,
 				},
 			});
 
-			console.log(
-				`Aisle ${aisle} Level ${level} - Picks: ${picks - lastShuttleCounts[aisle][level].picks}, Drops: ${
-					drops - lastShuttleCounts[aisle][level].drops
-				}, IATs: ${iat - lastShuttleCounts[aisle][level].iat}, Real Total KM: ${realTotalKM}`
-			);
+			//console.log(
+			//	`Aisle ${aisle} Level ${level} - Picks: ${picks - lastShuttleCounts[aisle][level].picks}, Drops: ${
+			//		drops - lastShuttleCounts[aisle][level].drops
+			//	}, IATs: ${iat - lastShuttleCounts[aisle][level].iat}, Real Total KM: ${realTotalKM}`
+			//);
 
 			lastShuttleCounts[aisle][level] = {
 				picks: parseInt(String(tempShuttleStats.pick_missions.value || 0)),
