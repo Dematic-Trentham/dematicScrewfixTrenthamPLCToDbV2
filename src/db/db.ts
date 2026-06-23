@@ -43,6 +43,7 @@ const adapter = new PrismaMariaDb({
 	password: process.env.DATABASE_PASSWORD,
 	database: process.env.DATABASE_NAME,
 	connectionLimit: 5,
+	acquireTimeout: 20000, // 20 seconds
 });
 
 export const db = globalForPrisma.db ?? new PrismaClient({ adapter });
