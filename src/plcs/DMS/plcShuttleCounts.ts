@@ -185,8 +185,17 @@ async function getShuttleCountsAllLevels(
 			}
 
 			// caculate the difference in counts since the last time we read the counts for this aisle and level, and write it to the database with a timestamp and the shuttle ID if we have it, if not write unknown as the shuttle ID
-			const realPicks = latestRow ? totalPicks - latestRow.runningPicks : 0;
-			const realDrops = latestRow ? totalDrops - latestRow.runningDrops : 0;
+			let realPicks = latestRow ? totalPicks - latestRow.runningPicks : 0;
+			let realDrops = latestRow ? totalDrops - latestRow.runningDrops : 0;
+
+			if (realPicks < 0 || realDrops < 0) {
+				logger.warn(
+					`Aisle ${aisle} Level ${level} - Negative delta detected. Picks: ${realPicks}, Drops: ${realDrops}. This may indicate a reset or error in the PLC counts.`
+				);
+
+				realPicks = 0;
+				realDrops = 0;
+			}
 
 			//lets create a new record in the Shuttle missions table with the shuttle stats and the shuttle location from the database
 			await db.dmsShuttleMissions.create({
